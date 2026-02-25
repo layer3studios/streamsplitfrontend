@@ -5,15 +5,13 @@ import Link from 'next/link';
 import { Search, ShoppingCart, X, Command } from 'lucide-react';
 import { useStore } from '../../lib/store';
 import ThemeToggle from '../ui/ThemeToggle';
+import SearchModal from '../ui/SearchModal';
 const BRAND = require('../../lib/brand');
 
 export default function Header() {
   const router = useRouter();
   const { isAuthenticated, user, setShowAuthModal, cartCount } = useStore();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [mobileSearch, setMobileSearch] = useState(false);
-  const mobileInputRef = useRef(null);
-  const desktopInputRef = useRef(null);
+  const [showSearch, setShowSearch] = useState(false);
 
   const navLinks = [
     { label: 'Explore', href: '/explore' },
@@ -22,26 +20,24 @@ export default function Header() {
     { label: 'Chat', href: '/chat' },
   ];
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    router.push(`/explore?query=${encodeURIComponent(searchQuery.trim())}`);
-    setMobileSearch(false);
-    setSearchQuery('');
-  };
-
-  // Close mobile search on Escape
+  // Close on Escape
   useEffect(() => {
-    if (!mobileSearch) return;
-    const handler = (e) => { if (e.key === 'Escape') setMobileSearch(false); };
+    const handler = (e) => { if (e.key === 'Escape') setShowSearch(false); };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [mobileSearch]);
+  }, []);
 
-  // Focus when modal opens
+  // Cmd/Ctrl+K to open
   useEffect(() => {
-    if (mobileSearch) mobileInputRef.current?.focus();
-  }, [mobileSearch]);
+    const handler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearch(s => !s);
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, []);
 
   return (
     <>
@@ -67,25 +63,18 @@ export default function Header() {
             {/* Right Actions */}
             <div className="flex items-center gap-1">
 
-              {/* Desktop Search — thin, elegant, pill-shaped */}
-              <form onSubmit={handleSearch} className="hidden md:block relative">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--muted)]" />
-                <input
-                  ref={desktopInputRef}
-                  type="text"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="h-[38px] w-44 lg:w-56 xl:max-w-[380px] rounded-full bg-transparent border border-[var(--border)] pl-9 pr-4 text-[13px] text-[var(--text)] placeholder:text-[var(--muted)] outline-none transition-all focus:border-[var(--border2)] focus:ring-2 focus:ring-[var(--accent)]/15"
-                />
-              </form>
+              {/* Desktop Search — opens unified modal */}
+              <button onClick={() => setShowSearch(true)}
+                className="hidden md:flex items-center gap-2 h-[38px] w-44 lg:w-56 rounded-full border border-[var(--border)] pl-3.5 pr-3 text-[13px] text-[var(--muted)] hover:border-[var(--border2)] transition-all">
+                <Search className="w-3.5 h-3.5 shrink-0" />
+                <span className="flex-1 text-left">Search...</span>
+                <kbd className="px-1.5 py-0.5 rounded border border-[var(--border)] text-[9px] font-mono opacity-60">⌘K</kbd>
+              </button>
 
               {/* Mobile Search Toggle */}
-              <button
-                onClick={() => setMobileSearch(true)}
+              <button onClick={() => setShowSearch(true)}
                 className="md:hidden p-2 rounded-full text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--border)] transition-all"
-                aria-label="Search"
-              >
+                aria-label="Search">
                 <Search className="w-[18px] h-[18px]" />
               </button>
 
@@ -119,36 +108,8 @@ export default function Header() {
         </div>
       </header>
 
-      {/* ═══ Mobile Search Modal (Command Palette) ═══ */}
-      {mobileSearch && (
-        <div className="fixed inset-0 z-[110] md:hidden">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => setMobileSearch(false)} />
-          <div className="relative mx-4 mt-4 animate-slide-up">
-            <form onSubmit={handleSearch} className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-xl overflow-hidden"
-              style={{ boxShadow: 'var(--shadowSoft)' }}>
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--border)]">
-                <Search className="w-5 h-5 text-[var(--muted)] shrink-0" />
-                <input
-                  ref={mobileInputRef}
-                  type="text"
-                  placeholder="Search brands, plans, groups..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="flex-1 bg-transparent text-[var(--text)] text-base outline-none placeholder:text-[var(--muted)]"
-                />
-                <button type="button" onClick={() => setMobileSearch(false)}
-                  className="p-1 rounded-lg text-[var(--muted)] hover:text-[var(--text)]">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="px-4 py-3 flex items-center justify-between text-xs text-[var(--muted)]">
-                <span>Press Enter to search</span>
-                <kbd className="px-1.5 py-0.5 rounded border border-[var(--border)] text-[10px] font-mono">ESC</kbd>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Unified Search Modal */}
+      <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />
     </>
   );
 }

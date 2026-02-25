@@ -1,4 +1,4 @@
-export default function EmptyState({ icon: Icon, title, description, actionLabel, actionHref, className = '' }) {
+export default function EmptyState({ icon: Icon, title, description, actionLabel, actionHref, className = '', children }) {
     return (
         <div className={`flex flex-col items-center justify-center py-16 text-center ${className}`}>
             {Icon && (
@@ -15,6 +15,7 @@ export default function EmptyState({ icon: Icon, title, description, actionLabel
                     {actionLabel}
                 </a>
             )}
+            {children}
         </div>
     );
 }

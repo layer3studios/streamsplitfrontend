@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Script from 'next/script';
-import { Users, CreditCard, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import { Users, CreditCard, CheckCircle, Loader2, AlertCircle, Clock } from 'lucide-react';
 import Header from '../../../components/layout/Header';
 import MobileNav from '../../../components/layout/MobileNav';
 import Footer from '../../../components/layout/Footer';
@@ -21,54 +21,97 @@ export default function JoinGroupPage() {
     const [loading, setLoading] = useState(true);
     const [joining, setJoining] = useState(false);
     const [result, setResult] = useState(null);
+    const [joinIntent, setJoinIntent] = useState(null);
     const [razorpayReady, setRazorpayReady] = useState(false);
+
+    const code = params.code;
 
     useEffect(() => {
         (async () => {
             setLoading(true);
-            const res = await api.resolveInvite(params.code);
-            if (res.success) setGroup(res.data);
-            else setResult({ type: 'error', message: res.message || 'Invalid invite link' });
+            const res = await api.resolveInvite(code);
+            if (res.success) {
+                setGroup(res.data);
+            } else {
+                const msg = res.error === 'EXPIRED'
+                    ? 'Invite has expired — ask the group owner for a new link.'
+                    : res.error === 'MAX_USES'
+                        ? 'This invite has reached its usage limit.'
+                        : res.message || 'Invalid invite code';
+                setResult({ type: 'error', message: msg, errorCode: res.error });
+            }
             setLoading(false);
         })();
-    }, [params.code]);
+    }, [code]);
 
     const handleJoin = useCallback(async () => {
         if (!isAuthenticated) { setShowAuthModal(true); return; }
         setJoining(true);
         try {
-            const res = await api.initiateJoin(group._id);
-            if (res.success) {
-                if (res.data?.razorpay_order_id && razorpayReady && window.Razorpay) {
-                    const options = {
-                        key: res.data.razorpay_key_id,
-                        amount: res.data.amount,
-                        currency: res.data.currency || 'INR',
-                        order_id: res.data.razorpay_order_id,
-                        name: group.name,
-                        handler: async function (response) {
-                            const verify = await api.verifyJoinPayment(response.razorpay_order_id, response.razorpay_payment_id, response.razorpay_signature);
-                            if (verify.success) setResult({ type: 'success', message: 'You joined the group!' });
-                            else setResult({ type: 'error', message: verify.message || 'Payment verification failed' });
-                        },
-                        prefill: { contact: user?.phone },
-                    };
-                    const rzp = new window.Razorpay(options);
-                    rzp.open();
-                } else {
-                    setResult({ type: 'success', message: res.message || 'You joined the group!' });
-                }
-            } else {
+            const res = await api.initiateInviteJoin(code, { payment_method: razorpayReady ? 'razorpay' : 'dev' });
+            if (!res.success) {
                 setResult({ type: 'error', message: res.message || 'Could not join group' });
+                setJoining(false);
+                return;
             }
+
+            const data = res.data;
+
+            // Already joined (free group or wallet)
+            if (data.joined) {
+                setResult({ type: 'success', message: res.message || 'You joined the group!', groupId: data.group_id });
+                setJoining(false);
+                return;
+            }
+
+            // Razorpay checkout
+            if (data.razorpay_order_id && razorpayReady && window.Razorpay) {
+                const options = {
+                    key: data.razorpay_key_id,
+                    amount: data.amount,
+                    currency: data.currency || 'INR',
+                    order_id: data.razorpay_order_id,
+                    name: group?.name || 'Group',
+                    handler: async function (response) {
+                        const verify = await api.verifyJoinPayment(response.razorpay_order_id, response.razorpay_payment_id, response.razorpay_signature);
+                        if (verify.success) setResult({ type: 'success', message: 'You joined the group!', groupId: verify.data?.group_id });
+                        else setResult({ type: 'error', message: verify.message || 'Payment verification failed' });
+                    },
+                    prefill: { contact: user?.phone },
+                };
+                const rzp = new window.Razorpay(options);
+                rzp.open();
+                setJoining(false);
+                return;
+            }
+
+            // Dev fallback — show confirm button
+            setJoinIntent(data);
+            setJoining(false);
         } catch (e) {
             setResult({ type: 'error', message: 'Something went wrong' });
+            setJoining(false);
+        }
+    }, [isAuthenticated, code, group, razorpayReady, user, setShowAuthModal]);
+
+    const handleDevConfirm = async () => {
+        if (!joinIntent) return;
+        setJoining(true);
+        try {
+            const res = await api.confirmInviteJoin(code, joinIntent.joinIntentId);
+            if (res.success) {
+                setResult({ type: 'success', message: res.message || 'Joined successfully!', groupId: res.data?.group_id });
+            } else {
+                setResult({ type: 'error', message: res.message || 'Join failed' });
+            }
+        } catch (e) {
+            setResult({ type: 'error', message: 'Confirmation failed' });
         }
         setJoining(false);
-    }, [isAuthenticated, group, razorpayReady, user, setShowAuthModal]);
+    };
 
     const filled = group?.member_count || 0;
-    const total = group?.max_members || 4;
+    const total = group?.max_members || group?.share_limit || 4;
     const isFull = filled >= total;
 
     return (
@@ -94,12 +137,32 @@ export default function JoinGroupPage() {
                                     </>
                                 ) : (
                                     <>
-                                        <AlertCircle className="w-12 h-12 text-[var(--danger)] mx-auto mb-4" />
-                                        <h2 className="text-heading text-xl mb-2">Oops</h2>
+                                        {result.errorCode === 'EXPIRED' ? (
+                                            <Clock className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+                                        ) : (
+                                            <AlertCircle className="w-12 h-12 text-[var(--danger)] mx-auto mb-4" />
+                                        )}
+                                        <h2 className="text-heading text-xl mb-2">
+                                            {result.errorCode === 'EXPIRED' ? 'Invite Expired' : 'Oops'}
+                                        </h2>
                                         <p className="text-caption mb-6">{result.message}</p>
                                         <button onClick={() => router.push('/groups')} className="btn-secondary">Browse Groups</button>
                                     </>
                                 )}
+                            </div>
+                        ) : joinIntent ? (
+                            /* Dev confirm step */
+                            <div className="paper-card p-8">
+                                <p className="text-meta mb-3">DEV PAYMENT CONFIRMATION</p>
+                                <h2 className="text-heading text-xl mb-2">{group?.name}</h2>
+                                <p className="text-caption mb-6">
+                                    Amount: {formatCurrency(joinIntent.amount)} · Payment: {joinIntent.payment_method}
+                                </p>
+                                <button onClick={handleDevConfirm} disabled={joining}
+                                    className="btn-primary w-full py-3.5 text-sm">
+                                    {joining ? <><Loader2 className="w-4 h-4 animate-spin" /> Confirming...</> : '✅ Confirm Payment (Dev)'}
+                                </button>
+                                <p className="text-[9px] text-[var(--muted)] mt-3">This button only appears in development mode</p>
                             </div>
                         ) : (
                             <>
@@ -116,7 +179,6 @@ export default function JoinGroupPage() {
                                         {isFull && <span className="badge text-[var(--danger)] border-[var(--danger)]">FULL</span>}
                                     </div>
 
-                                    {/* Progress */}
                                     <div className="w-full h-1.5 bg-[var(--border)] rounded-full overflow-hidden mb-6">
                                         <div className="h-full bg-[var(--accent)] rounded-full" style={{ width: `${(filled / total) * 100}%` }} />
                                     </div>
@@ -126,9 +188,13 @@ export default function JoinGroupPage() {
                                     <div className="flex items-baseline justify-between">
                                         <span className="text-meta">PRICE PER SEAT</span>
                                         <span className="font-serif text-3xl text-[var(--text)]">
-                                            {formatCurrency(group?.share_price || group?.price_per_member || 0)}
+                                            {formatCurrency(group?.share_price || 0)}
                                         </span>
                                     </div>
+
+                                    {group?.owner && (
+                                        <p className="text-[10px] text-[var(--muted)] mt-3">Hosted by {group.owner.name}</p>
+                                    )}
                                 </div>
 
                                 {isFull ? (
@@ -138,7 +204,9 @@ export default function JoinGroupPage() {
                                     </div>
                                 ) : (
                                     <button onClick={handleJoin} disabled={joining} className="btn-primary w-full py-3.5 text-sm">
-                                        {joining ? <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</> : <><CreditCard className="w-4 h-4" /> Join & Pay</>}
+                                        {joining
+                                            ? <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
+                                            : <><CreditCard className="w-4 h-4" /> {(group?.share_price || 0) === 0 ? 'Join for Free' : 'Join & Pay'}</>}
                                     </button>
                                 )}
                             </>

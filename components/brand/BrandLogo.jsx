@@ -12,9 +12,12 @@ import BrandMark from './BrandMark';
  */
 export default function BrandLogo({ brand = {}, size = 48, feature = false, className = '' }) {
     const s = feature ? Math.max(size, 72) : size;
-    const logoUrl = brand.logo_url || '';
+    const raw = brand.logo_url || '';
+    // Guard: ignore empty, whitespace-only, or broken data URIs like "data:;base64,="
+    const isValidUrl = raw.trim().length > 10 && !raw.match(/^data:;/);
+    const logoUrl = isValidUrl ? raw : '';
 
-    // No logo? Fallback to generated BrandMark
+    // No valid logo? Fallback to generated BrandMark
     if (!logoUrl) {
         return <BrandMark slug={brand.slug} name={brand.name} size={s} feature={feature} className={className} />;
     }

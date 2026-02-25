@@ -19,7 +19,6 @@ export default function AppBootstrap() {
                     const c = res.data.colors;
                     if (c) {
                         const root = document.documentElement;
-                        // Only apply accent — base paper palette stays fixed
                         if (c.primary) root.style.setProperty('--accent', c.primary);
                     }
                 }
@@ -30,20 +29,30 @@ export default function AppBootstrap() {
     }, []);
 
     // 3. When auth state is available, load user + cart
+    // Guard: only call protected endpoints if we actually have a token
     useEffect(() => {
         if (!isAuthenticated) return;
         if (!api.accessToken) return;
 
         (async () => {
             try {
-                const [userRes, cartRes] = await Promise.all([api.getMe(), api.getCart()]);
+                const userRes = await api.getMe();
                 if (userRes.success) {
                     setUser(userRes.data);
                     if (typeof window !== 'undefined') localStorage.setItem('user', JSON.stringify(userRes.data));
+                    // Only load cart after user is confirmed
+                    const cartRes = await api.getCart();
+                    if (cartRes.success) setCart(cartRes.data);
+                } else {
+                    // 401 or other failure — user session invalid, clear tokens quietly
+                    api.clearTokens();
+                    if (typeof window !== 'undefined') {
+                        localStorage.removeItem('user');
+                    }
                 }
-                if (cartRes.success) setCart(cartRes.data);
             } catch (e) {
-                console.warn('Failed to load user/cart data');
+                // Network error or similar — don't spam, just warn once
+                console.warn('Bootstrap: failed to load user data');
             }
         })();
     }, [isAuthenticated]);

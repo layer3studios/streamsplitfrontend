@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Users, Plus, Copy, Check, MessageCircle } from 'lucide-react';
+import { Users, Plus, Copy, Check, MessageCircle, Ticket } from 'lucide-react';
+import JoinByCodeModal from '../../components/join/JoinByCodeModal';
 import Header from '../../components/layout/Header';
 import MobileNav from '../../components/layout/MobileNav';
 import Footer from '../../components/layout/Footer';
@@ -21,6 +22,7 @@ export default function GroupsPage() {
   const [myGroups, setMyGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState(null);
+  const [showJoinModal, setShowJoinModal] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -34,7 +36,11 @@ export default function GroupsPage() {
       Promise.all([api.getMyGroups(), api.getOwnedGroups()]).then(([myRes, ownRes]) => {
         const my = myRes.success ? (myRes.data || []) : [];
         const owned = ownRes.success ? (ownRes.data || []) : [];
-        setMyGroups([...owned.map(g => ({ ...g, _role: 'owner' })), ...my.map(g => ({ ...g, _role: 'member' }))]);
+        // Dedupe: owned takes precedence over my
+        const map = new Map();
+        owned.forEach(g => map.set(g._id, { ...g, _role: 'owner' }));
+        my.forEach(g => { if (!map.has(g._id)) map.set(g._id, { ...g, _role: 'member' }); });
+        setMyGroups(Array.from(map.values()));
         setLoading(false);
       });
     }
@@ -70,6 +76,9 @@ export default function GroupsPage() {
                 My Groups
               </button>
               <div className="flex-1" />
+              <button onClick={() => setShowJoinModal(true)} className="btn-secondary text-xs py-2 px-4 flex items-center gap-1">
+                <Ticket className="w-3.5 h-3.5" /> Join by code
+              </button>
               <Link href="/create-group" className="btn-primary text-xs py-2 px-4">
                 <Plus className="w-4 h-4" /> Create
               </Link>
@@ -90,7 +99,13 @@ export default function GroupsPage() {
                 description={tab === 'public' ? 'Be the first to create one!' : 'Join a group or create your own'}
                 actionLabel="Create Group"
                 actionHref="/create-group"
-              />
+              >
+                {tab === 'my' && (
+                  <button onClick={() => setShowJoinModal(true)} className="btn-secondary text-xs py-2 px-4 mt-3 inline-flex items-center gap-1">
+                    <Ticket className="w-3.5 h-3.5" /> Join by code
+                  </button>
+                )}
+              </EmptyState>
             ) : tab === 'public' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {groups.map(group => {
@@ -158,6 +173,7 @@ export default function GroupsPage() {
         <Plus className="w-5 h-5" />
       </Link>
       <MobileNav />
+      <JoinByCodeModal isOpen={showJoinModal} onClose={() => setShowJoinModal(false)} />
     </div>
   );
 }

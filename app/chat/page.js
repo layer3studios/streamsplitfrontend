@@ -1,7 +1,8 @@
 'use client';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Send, MessageCircle, Users, Hash, User as UserIcon } from 'lucide-react';
+import { Send, MessageCircle, Users, Hash, User as UserIcon, Info, Pin, Shield, Megaphone, Key, Ticket } from 'lucide-react';
+import JoinByCodeModal from '../../components/join/JoinByCodeModal';
 import Header from '../../components/layout/Header';
 import MobileNav from '../../components/layout/MobileNav';
 import AuthModal from '../../components/ui/AuthModal';
@@ -12,22 +13,93 @@ import { ListSkeleton } from '../../components/ui/Skeleton';
 import UserAvatar from '../../components/ui/UserAvatar';
 import GroupSeatPills from '../../components/group/GroupSeatPills';
 import GroupRosterPanel from '../../components/group/GroupRosterPanel';
+import GroupInfoDrawer from '../../components/group/GroupInfoDrawer';
 import { useStore } from '../../lib/store';
 import api from '../../lib/api';
 import { io } from 'socket.io-client';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:4000';
 
+function MessageBubble({ msg, isOwn, user }) {
+  const time = new Date(msg.createdAt || msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  // System message
+  if (msg.type === 'system') {
+    return (
+      <div className="flex justify-center my-2">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--surface)] border border-[var(--border)]">
+          <Info className="w-3 h-3 text-[var(--muted)]" />
+          <p className="text-[11px] text-[var(--muted)]">{msg.content}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Announcement
+  if (msg.type === 'announcement') {
+    return (
+      <div className="my-2">
+        <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Megaphone className="w-3.5 h-3.5 text-amber-600" />
+            <span className="text-[10px] font-medium text-amber-700 dark:text-amber-400 tracking-wider">ANNOUNCEMENT</span>
+            {msg.pinned && <Pin className="w-3 h-3 text-amber-600 ml-auto" />}
+          </div>
+          <p className="text-sm text-[var(--text)] leading-relaxed">{msg.content}</p>
+          <p className="text-[9px] text-amber-600/60 mt-1">{msg.sender_id?.name} · {time}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Vault message
+  if (msg.type === 'vault') {
+    return (
+      <div className="my-2">
+        <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Key className="w-3.5 h-3.5 text-emerald-600" />
+            <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-400 tracking-wider">VAULT UPDATE</span>
+          </div>
+          <p className="text-sm text-[var(--text)]">{msg.content}</p>
+          <p className="text-[9px] text-emerald-600/60 mt-1">{msg.sender_id?.name} · {time}</p>
+          <p className="text-[9px] text-[var(--muted)] mt-0.5">Open Group Info → Vault tab to view credentials</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Regular text/image message
+  return (
+    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+      <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl ${isOwn
+        ? 'bg-[var(--text)] text-[var(--bg2)] rounded-br-md'
+        : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] rounded-bl-md'
+        }`}>
+        {!isOwn && (
+          <p className="text-[10px] font-medium opacity-60 mb-0.5">
+            {msg.sender_id?.name || 'User'}
+          </p>
+        )}
+        <p className="text-sm leading-relaxed">{msg.content || msg.message}</p>
+        <p className={`text-[9px] mt-1 ${isOwn ? 'opacity-50' : 'text-[var(--muted)]'}`}>{time}</p>
+      </div>
+    </div>
+  );
+}
+
 export default function ChatPage() {
   const searchParams = useSearchParams();
   const { isAuthenticated, user } = useStore();
   const [rooms, setRooms] = useState({ groups: [], dms: [] });
-  const [activeRoom, setActiveRoom] = useState(null); // { _id, type, name, meta }
+  const [activeRoom, setActiveRoom] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState('');
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState('groups'); // 'groups' | 'direct'
+  const [tab, setTab] = useState('groups');
   const [showRoster, setShowRoster] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
+  const [showJoinModal, setShowJoinModal] = useState(false);
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
   const prevRoomRef = useRef(null);
@@ -47,7 +119,6 @@ export default function ChatPage() {
   useEffect(() => {
     const roomParam = searchParams.get('room');
     if (roomParam && !activeRoom) {
-      // Find in loaded rooms
       const all = [...rooms.groups, ...rooms.dms];
       const found = all.find(r => r._id === roomParam);
       if (found) selectRoom(found);
@@ -55,7 +126,7 @@ export default function ChatPage() {
   }, [searchParams, rooms]);
 
   const selectRoom = (room) => {
-    const info = {
+    setActiveRoom({
       _id: room._id,
       type: room.type,
       name: room.type === 'group' ? room.group?.name : room.other_user?.name,
@@ -63,19 +134,17 @@ export default function ChatPage() {
       memberCount: room.group?.member_count,
       shareLimit: room.group?.share_limit,
       otherUserId: room.other_user?._id,
-    };
-    setActiveRoom(info);
+    });
     setMessages([]);
+    setShowInfo(false);
   };
 
   // Socket connection per room
   useEffect(() => {
     if (!activeRoom || !isAuthenticated) return;
-
     const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
     if (!token) return;
 
-    // Disconnect previous
     if (socketRef.current) {
       if (prevRoomRef.current) socketRef.current.emit('leave_room', prevRoomRef.current);
       socketRef.current.disconnect();
@@ -93,9 +162,7 @@ export default function ChatPage() {
   }, [activeRoom, isAuthenticated]);
 
   // Scroll to bottom
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   const sendMessage = () => {
     if (!newMsg.trim() || !socketRef.current || !activeRoom) return;
@@ -103,9 +170,10 @@ export default function ChatPage() {
     setNewMsg('');
   };
 
+  // Pinned announcement
+  const pinnedAnn = useMemo(() => messages.find(m => m.type === 'announcement' && m.pinned), [messages]);
+
   const currentList = tab === 'groups' ? rooms.groups : rooms.dms;
-  const emptyGroups = rooms.groups.length === 0;
-  const emptyDms = rooms.dms.length === 0;
 
   return (
     <div className="min-h-screen"><Header /><AuthModal />
@@ -116,53 +184,43 @@ export default function ChatPage() {
 
               {/* ─── Sidebar ─────────────────────────── */}
               <div className={`${activeRoom ? 'hidden md:flex' : 'flex'} flex-col w-full md:w-80 border-r border-[var(--border)] bg-[var(--bg)]`}>
-                {/* Chat header */}
-                <div className="p-4 border-b border-[var(--border)]">
+                <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
                   <p className="text-meta">CHAT</p>
+                  <button onClick={() => setShowJoinModal(true)} className="text-[10px] text-[var(--muted)] hover:text-[var(--text)] transition-colors flex items-center gap-1">
+                    <Ticket className="w-3 h-3" /> Join by code
+                  </button>
                 </div>
 
-                {/* Tabs */}
                 <div className="flex border-b border-[var(--border)]">
-                  <button
-                    onClick={() => setTab('groups')}
-                    className={`flex-1 py-2.5 text-xs font-medium tracking-wider transition-colors ${tab === 'groups'
-                        ? 'text-[var(--text)] border-b-2 border-[var(--text)]'
-                        : 'text-[var(--muted)] hover:text-[var(--text)]'
-                      }`}
-                  >
+                  <button onClick={() => setTab('groups')}
+                    className={`flex-1 py-2.5 text-xs font-medium tracking-wider transition-colors ${tab === 'groups' ? 'text-[var(--text)] border-b-2 border-[var(--text)]' : 'text-[var(--muted)] hover:text-[var(--text)]'}`}>
                     <Hash className="w-3 h-3 inline mr-1" />GROUPS
                     {rooms.groups.length > 0 && <span className="ml-1 text-[9px] opacity-60">({rooms.groups.length})</span>}
                   </button>
-                  <button
-                    onClick={() => setTab('direct')}
-                    className={`flex-1 py-2.5 text-xs font-medium tracking-wider transition-colors ${tab === 'direct'
-                        ? 'text-[var(--text)] border-b-2 border-[var(--text)]'
-                        : 'text-[var(--muted)] hover:text-[var(--text)]'
-                      }`}
-                  >
+                  <button onClick={() => setTab('direct')}
+                    className={`flex-1 py-2.5 text-xs font-medium tracking-wider transition-colors ${tab === 'direct' ? 'text-[var(--text)] border-b-2 border-[var(--text)]' : 'text-[var(--muted)] hover:text-[var(--text)]'}`}>
                     <UserIcon className="w-3 h-3 inline mr-1" />DIRECT
                     {rooms.dms.length > 0 && <span className="ml-1 text-[9px] opacity-60">({rooms.dms.length})</span>}
                   </button>
                 </div>
 
-                {/* Room list */}
                 <div className="flex-1 overflow-y-auto">
                   {loading ? (
                     <div className="p-4"><ListSkeleton rows={4} /></div>
                   ) : currentList.length === 0 ? (
                     tab === 'groups' ? (
-                      <EmptyState icon={Hash} title="No groups" description="Join a group to start chatting" actionLabel="Browse Groups" actionHref="/groups" />
+                      <EmptyState icon={Hash} title="No groups" description="Join a group to start chatting" actionLabel="Browse Groups" actionHref="/groups">
+                        <button onClick={() => setShowJoinModal(true)} className="btn-secondary text-xs py-2 px-4 mt-3 inline-flex items-center gap-1">
+                          <Ticket className="w-3.5 h-3.5" /> Join by code
+                        </button>
+                      </EmptyState>
                     ) : (
                       <EmptyState icon={MessageCircle} title="No DMs" description="Message a friend to start" actionLabel="Find Friends" actionHref="/friends" />
                     )
                   ) : (
                     currentList.map(room => (
-                      <button
-                        key={room._id}
-                        onClick={() => selectRoom(room)}
-                        className={`w-full text-left p-3 border-b border-[var(--border)] transition-colors ${activeRoom?._id === room._id ? 'bg-[var(--surface)]' : 'hover:bg-[var(--surface)]'
-                          }`}
-                      >
+                      <button key={room._id} onClick={() => selectRoom(room)}
+                        className={`w-full text-left p-3 border-b border-[var(--border)] transition-colors ${activeRoom?._id === room._id ? 'bg-[var(--surface)]' : 'hover:bg-[var(--surface)]'}`}>
                         <div className="flex items-center gap-3">
                           {room.type === 'group' ? (
                             <div className="w-9 h-9 rounded-xl bg-[var(--surface)] border border-[var(--border)] flex items-center justify-center shrink-0">
@@ -172,9 +230,7 @@ export default function ChatPage() {
                             <UserAvatar name={room.other_user?.name} userId={room.other_user?._id} size={36} />
                           )}
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-[var(--text)] truncate">
-                              {room.type === 'group' ? room.group?.name : room.other_user?.name}
-                            </p>
+                            <p className="text-sm font-medium text-[var(--text)] truncate">{room.type === 'group' ? room.group?.name : room.other_user?.name}</p>
                             {room.last_message_preview ? (
                               <p className="text-[11px] text-[var(--muted)] truncate">{room.last_message_preview}</p>
                             ) : (
@@ -214,16 +270,26 @@ export default function ChatPage() {
                       {activeRoom.type === 'group' && activeRoom.groupId && (
                         <>
                           <GroupSeatPills memberCount={activeRoom.memberCount} shareLimit={activeRoom.shareLimit} />
-                          <button
-                            onClick={() => setShowRoster(true)}
-                            className="p-2 rounded-xl hover:bg-[var(--bg)] border border-[var(--border)] transition-colors"
-                            title="View members"
-                          >
+                          <button onClick={() => setShowRoster(true)}
+                            className="p-2 rounded-xl hover:bg-[var(--bg)] border border-[var(--border)] transition-colors" title="Members">
                             <Users className="w-4 h-4 text-[var(--text)]" />
+                          </button>
+                          <button onClick={() => setShowInfo(true)}
+                            className="p-2 rounded-xl hover:bg-[var(--bg)] border border-[var(--border)] transition-colors" title="Group info">
+                            <Info className="w-4 h-4 text-[var(--text)]" />
                           </button>
                         </>
                       )}
                     </div>
+
+                    {/* Pinned announcement banner */}
+                    {pinnedAnn && (
+                      <div className="px-4 py-2 bg-amber-50 dark:bg-amber-950/20 border-b border-amber-200 dark:border-amber-800 flex items-center gap-2">
+                        <Pin className="w-3 h-3 text-amber-600 shrink-0" />
+                        <p className="text-[11px] text-amber-700 dark:text-amber-400 truncate flex-1">{pinnedAnn.content}</p>
+                        <span className="text-[9px] text-amber-500 shrink-0">PINNED</span>
+                      </div>
+                    )}
 
                     {/* Messages */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -232,24 +298,7 @@ export default function ChatPage() {
                       )}
                       {messages.map((msg, i) => {
                         const isOwn = msg.sender_id === user?._id || msg.sender_id?._id === user?._id;
-                        return (
-                          <div key={msg._id || i} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl ${isOwn
-                              ? 'bg-[var(--text)] text-[var(--bg2)] rounded-br-md'
-                              : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] rounded-bl-md'
-                              }`}>
-                              {!isOwn && (
-                                <p className="text-[10px] font-medium opacity-60 mb-0.5">
-                                  {msg.sender_id?.name || 'User'}
-                                </p>
-                              )}
-                              <p className="text-sm leading-relaxed">{msg.content || msg.message}</p>
-                              <p className={`text-[9px] mt-1 ${isOwn ? 'opacity-50' : 'text-[var(--muted)]'}`}>
-                                {new Date(msg.createdAt || msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </p>
-                            </div>
-                          </div>
-                        );
+                        return <MessageBubble key={msg._id || i} msg={msg} isOwn={isOwn} user={user} />;
                       })}
                       <div ref={messagesEndRef} />
                     </div>
@@ -257,14 +306,10 @@ export default function ChatPage() {
                     {/* Composer */}
                     <div className="p-3 border-t border-[var(--border)] bg-[var(--surface)]">
                       <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          placeholder="Type a message..."
-                          value={newMsg}
+                        <input type="text" placeholder="Type a message..." value={newMsg}
                           onChange={e => setNewMsg(e.target.value)}
                           onKeyDown={e => e.key === 'Enter' && sendMessage()}
-                          className="input flex-1"
-                        />
+                          className="input flex-1" />
                         <button onClick={sendMessage} disabled={!newMsg.trim()} className="btn-primary p-2.5 rounded-full">
                           <Send className="w-4 h-4" />
                         </button>
@@ -284,10 +329,13 @@ export default function ChatPage() {
       </MotionPage>
       <MobileNav />
 
-      {/* Roster Panel */}
       {showRoster && activeRoom?.groupId && (
         <GroupRosterPanel groupId={activeRoom.groupId} onClose={() => setShowRoster(false)} />
       )}
+      {showInfo && activeRoom?.groupId && (
+        <GroupInfoDrawer groupId={activeRoom.groupId} groupName={activeRoom.name} onClose={() => setShowInfo(false)} />
+      )}
+      <JoinByCodeModal isOpen={showJoinModal} onClose={() => setShowJoinModal(false)} />
     </div>
   );
 }
