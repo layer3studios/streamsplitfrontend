@@ -50,14 +50,14 @@ export default function AdminWithdrawalsPage() {
     return (
         <div>
             <div className="flex items-center justify-between mb-6">
-                <h1 className="font-heading font-bold text-2xl text-white">Withdrawal Requests</h1>
+                <h1 className="font-heading font-bold text-2xl text-[var(--text)]">Withdrawal Requests</h1>
             </div>
 
             {/* Filter */}
             <div className="flex gap-2 mb-4 flex-wrap">
                 {statuses.map(s => (
                     <button key={s} onClick={() => setFilter(s)}
-                        className={`px-3 py-1.5 text-xs rounded-lg border transition-all ${filter === s ? 'border-brand-primary bg-brand-primary/10 text-brand-primary-light' : 'border-dark-border text-gray-500 hover:border-gray-500'}`}>
+                        className={`px-3 py-1.5 text-xs rounded-lg border transition-all ${filter === s ? 'border-brand-primary bg-brand-primary/10 text-brand-primary-light' : 'border-[var(--border)] text-gray-500 hover:border-gray-500'}`}>
                         {s || 'All'}
                     </button>
                 ))}
@@ -66,7 +66,7 @@ export default function AdminWithdrawalsPage() {
             {loading ? (
                 <div className="skeleton h-40 rounded-2xl" />
             ) : requests.length === 0 ? (
-                <div className="card p-8 text-center text-gray-500">
+                <div className="card p-8 text-center text-[var(--muted)]">
                     <ArrowDownRight className="w-12 h-12 mx-auto mb-3 opacity-30" />
                     <p className="text-sm">No withdrawal requests{filter ? ` with status "${filter}"` : ''}</p>
                 </div>
@@ -79,15 +79,15 @@ export default function AdminWithdrawalsPage() {
                                     <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${STATUS_COLORS[wr.status]}`}>
                                         {wr.status}
                                     </span>
-                                    <span className="text-white font-heading font-bold text-lg">{BRAND.currency.symbol}{wr.amount}</span>
+                                    <span className="text-[var(--text)] font-heading font-bold text-lg">{BRAND.currency.symbol}{wr.amount}</span>
                                 </div>
-                                <span className="text-gray-600 text-xs">{new Date(wr.createdAt).toLocaleDateString()}</span>
+                                <span className="text-[var(--muted)] text-xs">{new Date(wr.createdAt).toLocaleDateString()}</span>
                             </div>
 
-                            <div className="text-sm text-gray-400 space-y-0.5">
-                                <p>Owner: <span className="text-white">{wr.owner_id?.name || 'Unknown'}</span> • {wr.owner_id?.phone}</p>
-                                <p>Method: <span className="text-white">{wr.payout_method?.toUpperCase()}</span> • {wr.payout_details?.upi_id || 'Bank'}</p>
-                                {wr.razorpay_payout_id && <p className="text-gray-600">Payout ID: {wr.razorpay_payout_id}</p>}
+                            <div className="text-sm text-[var(--muted)] space-y-0.5">
+                                <p>Owner: <span className="text-[var(--text)]">{wr.owner_id?.name || 'Unknown'}</span> • {wr.owner_id?.phone}</p>
+                                <p>Method: <span className="text-[var(--text)]">{wr.payout_method?.toUpperCase()}</span> • {wr.payout_details?.upi_id || 'Bank'}</p>
+                                {wr.razorpay_payout_id && <p className="text-[var(--muted)]">Payout ID: {wr.razorpay_payout_id}</p>}
                                 {wr.reject_reason && <p className="text-red-400">Rejected: {wr.reject_reason}</p>}
                             </div>
 

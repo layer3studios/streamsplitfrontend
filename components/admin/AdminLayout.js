@@ -29,7 +29,6 @@ export default function AdminLayout({ children }) {
     const [checking, setChecking] = useState(true);
 
     useEffect(() => {
-        // Wait for hydration
         const timer = setTimeout(() => setChecking(false), 500);
         return () => clearTimeout(timer);
     }, []);
@@ -41,26 +40,24 @@ export default function AdminLayout({ children }) {
         router.push('/');
     };
 
-    // Loading state
     if (checking) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
                     <div className="w-10 h-10 border-2 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                    <p className="text-gray-500 text-sm">Loading admin...</p>
+                    <p className="text-[var(--muted)] text-sm">Loading admin...</p>
                 </div>
             </div>
         );
     }
 
-    // Auth guard
     if (!isAuthenticated) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <Shield className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                    <h2 className="font-heading font-bold text-xl text-white mb-2">Admin Access Required</h2>
-                    <p className="text-gray-500 text-sm mb-5">Please sign in with an admin account</p>
+                    <Shield className="w-16 h-16 text-[var(--muted)] mx-auto mb-4" />
+                    <h2 className="font-heading font-bold text-xl text-[var(--text)] mb-2">Admin Access Required</h2>
+                    <p className="text-[var(--muted)] text-sm mb-5">Please sign in with an admin account</p>
                     <button onClick={() => { setShowAuthModal(true); }} className="btn-primary py-3 px-8 text-sm">
                         Sign In
                     </button>
@@ -69,14 +66,13 @@ export default function AdminLayout({ children }) {
         );
     }
 
-    // Role guard
     if (user?.role !== 'admin' && user?.role !== 'super_admin') {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
                     <Shield className="w-16 h-16 text-red-500/50 mx-auto mb-4" />
-                    <h2 className="font-heading font-bold text-xl text-white mb-2">403 — Not Authorized</h2>
-                    <p className="text-gray-500 text-sm mb-5">You don't have admin permissions</p>
+                    <h2 className="font-heading font-bold text-xl text-[var(--text)] mb-2">403 — Not Authorized</h2>
+                    <p className="text-[var(--muted)] text-sm mb-5">You don't have admin permissions</p>
                     <Link href="/" className="btn-primary py-3 px-8 text-sm">Go to Homepage</Link>
                 </div>
             </div>
@@ -85,10 +81,9 @@ export default function AdminLayout({ children }) {
 
     return (
         <div className="min-h-screen flex">
-            {/* Sidebar */}
-            <aside className={`fixed top-0 left-0 h-full z-40 bg-[#0d0d14] border-r border-dark-border transition-all duration-300 flex flex-col ${collapsed ? 'w-16' : 'w-56'}`}>
-                {/* Logo */}
-                <div className="h-14 flex items-center px-4 border-b border-dark-border gap-2">
+            {/* Sidebar — intentionally dark panel */}
+            <aside className={`fixed top-0 left-0 h-full z-40 bg-[#0d0d14] border-r border-white/[0.06] transition-all duration-300 flex flex-col ${collapsed ? 'w-16' : 'w-56'}`}>
+                <div className="h-14 flex items-center px-4 border-b border-white/[0.06] gap-2">
                     <div className="w-8 h-8 rounded-lg brand-gradient flex items-center justify-center shrink-0">
                         <span className="text-white font-heading font-bold text-sm">{BRAND.name.charAt(0)}</span>
                     </div>
@@ -100,7 +95,6 @@ export default function AdminLayout({ children }) {
                     )}
                 </div>
 
-                {/* Nav */}
                 <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
                     {NAV_ITEMS.map(({ icon: Icon, label, path }) => {
                         const isActive = path === '/admin' ? pathname === '/admin' : pathname.startsWith(path);
@@ -110,7 +104,7 @@ export default function AdminLayout({ children }) {
                                 href={path}
                                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${isActive
                                     ? 'bg-brand-primary/10 text-brand-primary-light border border-brand-primary/20'
-                                    : 'text-gray-500 hover:text-white hover:bg-white/5'
+                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
                                     }`}
                                 title={collapsed ? label : undefined}
                             >
@@ -121,11 +115,10 @@ export default function AdminLayout({ children }) {
                     })}
                 </nav>
 
-                {/* Footer */}
-                <div className="p-2 border-t border-dark-border space-y-1">
+                <div className="p-2 border-t border-white/[0.06] space-y-1">
                     <button
                         onClick={() => setCollapsed(!collapsed)}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:text-white hover:bg-white/5 text-sm transition-all"
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-500 hover:text-white hover:bg-white/5 text-sm transition-all"
                     >
                         {collapsed ? <ChevronRight className="w-4 h-4 shrink-0" /> : <><ChevronLeft className="w-4 h-4 shrink-0" /><span>Collapse</span></>}
                     </button>
@@ -141,18 +134,16 @@ export default function AdminLayout({ children }) {
 
             {/* Main Content */}
             <main className={`flex-1 transition-all duration-300 ${collapsed ? 'ml-16' : 'ml-56'}`}>
-                {/* Top bar */}
-                <header className="sticky top-0 z-30 h-14 glass border-b border-dark-border flex items-center justify-between px-6">
+                <header className="sticky top-0 z-30 h-14 bg-[var(--surface)]/80 backdrop-blur-md border-b border-[var(--border)] flex items-center justify-between px-6">
                     <div />
                     <div className="flex items-center gap-3">
-                        <span className="text-gray-500 text-sm">{user?.name || 'Admin'}</span>
+                        <span className="text-[var(--muted)] text-sm">{user?.name || 'Admin'}</span>
                         <div className="w-8 h-8 rounded-full brand-gradient flex items-center justify-center">
                             <span className="text-white font-bold text-xs">{(user?.name || 'A').charAt(0).toUpperCase()}</span>
                         </div>
                     </div>
                 </header>
 
-                {/* Page Content */}
                 <div className="p-6">
                     {children}
                 </div>

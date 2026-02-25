@@ -26,8 +26,8 @@ export default function AdminOverview() {
     return (
         <div>
             <div className="mb-6">
-                <h1 className="font-heading font-bold text-2xl text-white">Dashboard Overview</h1>
-                <p className="text-gray-500 text-sm mt-1">Welcome to {BRAND.name} Admin</p>
+                <h1 className="font-heading font-bold text-2xl text-[var(--text)]">Dashboard Overview</h1>
+                <p className="text-[var(--muted)] text-sm mt-1">Welcome to {BRAND.name} Admin</p>
             </div>
 
             {/* KPI Cards */}
@@ -44,8 +44,8 @@ export default function AdminOverview() {
                                     <kpi.icon className={`w-5 h-5 ${kpi.color}`} />
                                 </div>
                             </div>
-                            <p className="text-2xl font-heading font-bold text-white">{kpi.value}</p>
-                            <p className="text-gray-500 text-sm mt-0.5">{kpi.label}</p>
+                            <p className="text-2xl font-heading font-bold text-[var(--text)]">{kpi.value}</p>
+                            <p className="text-[var(--muted)] text-sm mt-0.5">{kpi.label}</p>
                         </div>
                     ))}
                 </div>
@@ -54,7 +54,7 @@ export default function AdminOverview() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Recent Users */}
                 <div className="card p-5 hover:transform-none">
-                    <h3 className="font-heading font-semibold text-white mb-4">Recent Signups</h3>
+                    <h3 className="font-heading font-semibold text-[var(--text)] mb-4">Recent Signups</h3>
                     {loading ? (
                         <div className="space-y-2">{[1, 2, 3].map(i => <div key={i} className="skeleton h-10 rounded-xl" />)}</div>
                     ) : (
@@ -65,12 +65,12 @@ export default function AdminOverview() {
                                         <span className="text-brand-primary-light text-xs font-bold">{(u.name || 'U').charAt(0)}</span>
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-white text-sm font-medium truncate">{u.name || 'Unnamed'}</p>
-                                        <p className="text-gray-600 text-xs">{u.phone}</p>
+                                        <p className="text-[var(--text)] text-sm font-medium truncate">{u.name || 'Unnamed'}</p>
+                                        <p className="text-[var(--muted)] text-xs">{u.phone}</p>
                                     </div>
-                                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${u.role === 'admin' || u.role === 'super_admin' ? 'text-purple-400 bg-purple-400/10' : 'text-gray-400 bg-gray-400/10'
+                                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${u.role === 'admin' || u.role === 'super_admin' ? 'text-purple-400 bg-purple-400/10' : 'text-[var(--muted)] bg-gray-400/10'
                                         }`}>{u.role}</span>
-                                    <span className="text-gray-600 text-xs">{new Date(u.createdAt).toLocaleDateString()}</span>
+                                    <span className="text-[var(--muted)] text-xs">{new Date(u.createdAt).toLocaleDateString()}</span>
                                 </div>
                             ))}
                         </div>
@@ -79,11 +79,11 @@ export default function AdminOverview() {
 
                 {/* Recent Orders */}
                 <div className="card p-5 hover:transform-none">
-                    <h3 className="font-heading font-semibold text-white mb-4">Recent Orders</h3>
+                    <h3 className="font-heading font-semibold text-[var(--text)] mb-4">Recent Orders</h3>
                     {loading ? (
                         <div className="space-y-2">{[1, 2, 3].map(i => <div key={i} className="skeleton h-10 rounded-xl" />)}</div>
                     ) : data?.recentOrders?.length === 0 ? (
-                        <p className="text-gray-500 text-sm py-6 text-center">No orders yet</p>
+                        <p className="text-[var(--muted)] text-sm py-6 text-center">No orders yet</p>
                     ) : (
                         <div className="space-y-2">
                             {data?.recentOrders?.map(o => (
@@ -92,13 +92,13 @@ export default function AdminOverview() {
                                         <ShoppingBag className="w-4 h-4 text-green-400" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-white text-sm font-medium">{o.order_number}</p>
-                                        <p className="text-gray-600 text-xs">{o.payment_method}</p>
+                                        <p className="text-[var(--text)] text-sm font-medium">{o.order_number}</p>
+                                        <p className="text-[var(--muted)] text-xs">{o.payment_method}</p>
                                     </div>
-                                    <span className="text-white font-heading font-bold text-sm">{BRAND.currency.symbol}{o.total}</span>
+                                    <span className="text-[var(--text)] font-heading font-bold text-sm">{BRAND.currency.symbol}{o.total}</span>
                                     <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${o.status === 'fulfilled' ? 'text-green-400 bg-green-400/10' :
                                             o.status === 'pending' ? 'text-yellow-400 bg-yellow-400/10' :
-                                                'text-gray-400 bg-gray-400/10'
+                                                'text-[var(--muted)] bg-gray-400/10'
                                         }`}>{o.status}</span>
                                 </div>
                             ))}

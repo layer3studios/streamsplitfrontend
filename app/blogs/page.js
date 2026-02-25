@@ -33,8 +33,8 @@ export default function BlogsPage() {
       <main className="pt-20 pb-24 md:pb-8 px-4 lg:px-6">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
-            <h1 className="font-heading font-bold text-3xl text-white mb-2">{BRAND.name} Blog</h1>
-            <p className="text-gray-500">Tips, guides, and news about saving on subscriptions</p>
+            <h1 className="font-heading font-bold text-3xl text-[var(--text)] mb-2">{BRAND.name} Blog</h1>
+            <p className="text-[var(--muted)]">Tips, guides, and news about saving on subscriptions</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -44,21 +44,21 @@ export default function BlogsPage() {
                   <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${catColors[post.category] || catColors.Tips}`}>
                     {post.category}
                   </span>
-                  <div className="flex items-center gap-1 text-gray-600 text-xs">
+                  <div className="flex items-center gap-1 text-[var(--muted)] text-xs">
                     <Clock className="w-3 h-3" />
                     {post.readTime}
                   </div>
                 </div>
 
-                <h2 className="font-heading font-bold text-white text-base mb-2 group-hover:text-brand-primary-light transition-colors">
+                <h2 className="font-heading font-bold text-[var(--text)] text-base mb-2 group-hover:text-brand-primary-light transition-colors">
                   {post.title}
                 </h2>
-                <p className="text-gray-500 text-sm leading-relaxed mb-3">
+                <p className="text-[var(--muted)] text-sm leading-relaxed mb-3">
                   {post.excerpt}
                 </p>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600 text-xs">{post.date}</span>
+                  <span className="text-[var(--muted)] text-xs">{post.date}</span>
                   <span className="text-brand-primary-light text-xs font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     Read More <ArrowRight className="w-3 h-3" />
                   </span>

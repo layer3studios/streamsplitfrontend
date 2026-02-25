@@ -63,8 +63,8 @@ export default function OwnerWithdrawalsPage() {
                 <Header /><AuthModal />
                 <main className="pt-20 pb-24 px-4 flex items-center justify-center min-h-[60vh]">
                     <div className="text-center">
-                        <ArrowDownRight className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                        <h2 className="font-heading font-bold text-xl text-white mb-2">Sign in to view withdrawals</h2>
+                        <ArrowDownRight className="w-16 h-16 text-[var(--muted)] mx-auto mb-4" />
+                        <h2 className="font-heading font-bold text-xl text-[var(--text)] mb-2">Sign in to view withdrawals</h2>
                         <button onClick={() => setShowAuthModal(true)} className="btn-primary py-3 px-8 text-sm">Login / Sign Up</button>
                     </div>
                 </main>
@@ -78,12 +78,12 @@ export default function OwnerWithdrawalsPage() {
             <Header /><AuthModal />
             <main className="pt-20 pb-24 md:pb-8 px-4 lg:px-6">
                 <div className="max-w-2xl mx-auto">
-                    <Link href="/owner/earnings" className="flex items-center gap-2 text-gray-400 hover:text-white text-sm mb-4 transition-colors">
+                    <Link href="/owner/earnings" className="flex items-center gap-2 text-gray-400 hover:text-[var(--text)] text-sm mb-4 transition-colors">
                         <ArrowLeft className="w-4 h-4" /> Back to Earnings
                     </Link>
 
                     <div className="flex items-center justify-between mb-6">
-                        <h1 className="font-heading font-bold text-2xl text-white">Withdrawals</h1>
+                        <h1 className="font-heading font-bold text-2xl text-[var(--text)]">Withdrawals</h1>
                         {summary && summary.withdrawable_balance >= summary.min_withdrawal && !showForm && (
                             <button onClick={() => setShowForm(true)} className="btn-primary py-2 px-4 text-sm">Request Withdrawal</button>
                         )}
@@ -96,10 +96,10 @@ export default function OwnerWithdrawalsPage() {
                             {/* Balance */}
                             <div className="card p-4 mb-5 flex items-center justify-between hover:transform-none">
                                 <div>
-                                    <p className="text-gray-500 text-xs">Withdrawable Balance</p>
-                                    <p className="text-white font-heading font-bold text-2xl">{BRAND.currency.symbol}{summary?.withdrawable_balance || 0}</p>
+                                    <p className="text-[var(--muted)] text-xs">Withdrawable Balance</p>
+                                    <p className="text-[var(--text)] font-heading font-bold text-2xl">{BRAND.currency.symbol}{summary?.withdrawable_balance || 0}</p>
                                 </div>
-                                <p className="text-gray-600 text-xs">Min: {BRAND.currency.symbol}{summary?.min_withdrawal || 100}</p>
+                                <p className="text-[var(--muted)] text-xs">Min: {BRAND.currency.symbol}{summary?.min_withdrawal || 100}</p>
                             </div>
 
                             {/* Result */}
@@ -113,15 +113,15 @@ export default function OwnerWithdrawalsPage() {
                             {/* Request Form */}
                             {showForm && (
                                 <form onSubmit={handleRequest} className="card p-5 mb-5 space-y-3 hover:transform-none">
-                                    <h3 className="text-white font-heading font-bold text-sm">Request Withdrawal</h3>
+                                    <h3 className="text-[var(--text)] font-heading font-bold text-sm">Request Withdrawal</h3>
                                     <div>
-                                        <label className="block text-xs text-gray-500 mb-1">Amount ({BRAND.currency.symbol})</label>
+                                        <label className="block text-xs text-[var(--muted)] mb-1">Amount ({BRAND.currency.symbol})</label>
                                         <input type="number" min={summary?.min_withdrawal || 100} max={summary?.withdrawable_balance || 0}
                                             value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })}
                                             className="input py-2" required />
                                     </div>
                                     <div>
-                                        <label className="block text-xs text-gray-500 mb-1">Payout Method</label>
+                                        <label className="block text-xs text-[var(--muted)] mb-1">Payout Method</label>
                                         <select value={form.payout_method} onChange={e => setForm({ ...form, payout_method: e.target.value })} className="input py-2">
                                             <option value="upi">UPI</option>
                                             <option value="bank">Bank Transfer</option>
@@ -129,7 +129,7 @@ export default function OwnerWithdrawalsPage() {
                                     </div>
                                     {form.payout_method === 'upi' && (
                                         <div>
-                                            <label className="block text-xs text-gray-500 mb-1">UPI ID</label>
+                                            <label className="block text-xs text-[var(--muted)] mb-1">UPI ID</label>
                                             <input value={form.upi_id} onChange={e => setForm({ ...form, upi_id: e.target.value })}
                                                 placeholder="name@upi" className="input py-2" required />
                                         </div>
@@ -138,15 +138,15 @@ export default function OwnerWithdrawalsPage() {
                                         <button type="submit" disabled={submitting} className="btn-primary flex-1 py-2.5 text-sm flex items-center justify-center gap-1">
                                             {submitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</> : 'Submit Request'}
                                         </button>
-                                        <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2.5 text-sm text-gray-400 border border-dark-border rounded-xl hover:bg-white/5">Cancel</button>
+                                        <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2.5 text-sm text-[var(--muted)] border border-[var(--border)] rounded-xl hover:bg-white/5">Cancel</button>
                                     </div>
                                 </form>
                             )}
 
                             {/* History */}
-                            <h2 className="font-heading font-bold text-lg text-white mb-3">History</h2>
+                            <h2 className="font-heading font-bold text-lg text-[var(--text)] mb-3">History</h2>
                             {withdrawals.length === 0 ? (
-                                <div className="card p-6 text-center text-gray-500 text-sm hover:transform-none">No withdrawal requests yet</div>
+                                <div className="card p-6 text-center text-[var(--muted)] text-sm hover:transform-none">No withdrawal requests yet</div>
                             ) : (
                                 <div className="space-y-2">
                                     {withdrawals.map(w => (
@@ -156,13 +156,13 @@ export default function OwnerWithdrawalsPage() {
                                                     <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${STATUS_COLORS[w.status] || ''}`}>
                                                         {w.status}
                                                     </span>
-                                                    <span className="text-white font-heading font-bold">{BRAND.currency.symbol}{w.amount}</span>
+                                                    <span className="text-[var(--text)] font-heading font-bold">{BRAND.currency.symbol}{w.amount}</span>
                                                 </div>
-                                                <span className="text-gray-600 text-xs">{new Date(w.createdAt).toLocaleDateString()}</span>
+                                                <span className="text-[var(--muted)] text-xs">{new Date(w.createdAt).toLocaleDateString()}</span>
                                             </div>
-                                            <p className="text-gray-500 text-xs">{w.payout_method.toUpperCase()} • {w.payout_details?.upi_id || 'Bank transfer'}</p>
+                                            <p className="text-[var(--muted)] text-xs">{w.payout_method.toUpperCase()} • {w.payout_details?.upi_id || 'Bank transfer'}</p>
                                             {w.reject_reason && <p className="text-red-400 text-xs mt-1">Reason: {w.reject_reason}</p>}
-                                            {w.razorpay_payout_id && <p className="text-gray-600 text-xs mt-1">Payout ID: {w.razorpay_payout_id}</p>}
+                                            {w.razorpay_payout_id && <p className="text-[var(--muted)] text-xs mt-1">Payout ID: {w.razorpay_payout_id}</p>}
                                         </div>
                                     ))}
                                 </div>

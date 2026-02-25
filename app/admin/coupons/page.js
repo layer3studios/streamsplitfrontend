@@ -53,8 +53,8 @@ export default function AdminCouponsPage() {
         <div>
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h1 className="font-heading font-bold text-2xl text-white">Coupon Management</h1>
-                    <p className="text-gray-500 text-sm mt-1">{coupons.length} coupons</p>
+                    <h1 className="font-heading font-bold text-2xl text-[var(--text)]">Coupon Management</h1>
+                    <p className="text-[var(--muted)] text-sm mt-1">{coupons.length} coupons</p>
                 </div>
                 <button onClick={() => setShowForm(!showForm)} className="btn-primary px-4 py-2.5 text-sm flex items-center gap-2">
                     {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
@@ -65,37 +65,37 @@ export default function AdminCouponsPage() {
             {/* Create Form */}
             {showForm && (
                 <form onSubmit={handleCreate} className="card p-5 mb-6 hover:transform-none animate-slide-up">
-                    <h3 className="font-heading font-semibold text-white mb-4">New Coupon</h3>
+                    <h3 className="font-heading font-semibold text-[var(--text)] mb-4">New Coupon</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         <div>
-                            <label className="text-gray-400 text-xs font-medium mb-1 block">Code *</label>
+                            <label className="text-[var(--muted)] text-xs font-medium mb-1 block">Code *</label>
                             <input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
                                 placeholder="WELCOME50" className="input py-2.5" required />
                         </div>
                         <div>
-                            <label className="text-gray-400 text-xs font-medium mb-1 block">Type *</label>
+                            <label className="text-[var(--muted)] text-xs font-medium mb-1 block">Type *</label>
                             <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className="input py-2.5">
                                 <option value="percentage">Percentage</option>
                                 <option value="flat">Flat</option>
                             </select>
                         </div>
                         <div>
-                            <label className="text-gray-400 text-xs font-medium mb-1 block">Value *</label>
+                            <label className="text-[var(--muted)] text-xs font-medium mb-1 block">Value *</label>
                             <input type="number" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })}
                                 placeholder={form.type === 'percentage' ? '50' : '100'} className="input py-2.5" required />
                         </div>
                         <div>
-                            <label className="text-gray-400 text-xs font-medium mb-1 block">Max Discount</label>
+                            <label className="text-[var(--muted)] text-xs font-medium mb-1 block">Max Discount</label>
                             <input type="number" value={form.max_discount} onChange={(e) => setForm({ ...form, max_discount: e.target.value })}
                                 placeholder="0 = no limit" className="input py-2.5" />
                         </div>
                         <div>
-                            <label className="text-gray-400 text-xs font-medium mb-1 block">Min Order Value</label>
+                            <label className="text-[var(--muted)] text-xs font-medium mb-1 block">Min Order Value</label>
                             <input type="number" value={form.min_order_value} onChange={(e) => setForm({ ...form, min_order_value: e.target.value })}
                                 placeholder="0" className="input py-2.5" />
                         </div>
                         <div>
-                            <label className="text-gray-400 text-xs font-medium mb-1 block">Usage Limit</label>
+                            <label className="text-[var(--muted)] text-xs font-medium mb-1 block">Usage Limit</label>
                             <input type="number" value={form.usage_limit} onChange={(e) => setForm({ ...form, usage_limit: e.target.value })}
                                 placeholder="-1 = unlimited" className="input py-2.5" />
                         </div>
@@ -111,14 +111,14 @@ export default function AdminCouponsPage() {
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
-                            <tr className="border-b border-dark-border">
-                                <th className="text-left text-gray-500 text-xs font-medium uppercase py-3 px-4">Code</th>
-                                <th className="text-left text-gray-500 text-xs font-medium uppercase py-3 px-4">Type</th>
-                                <th className="text-left text-gray-500 text-xs font-medium uppercase py-3 px-4">Value</th>
-                                <th className="text-left text-gray-500 text-xs font-medium uppercase py-3 px-4">Max Discount</th>
-                                <th className="text-left text-gray-500 text-xs font-medium uppercase py-3 px-4">Min Order</th>
-                                <th className="text-left text-gray-500 text-xs font-medium uppercase py-3 px-4">Usage</th>
-                                <th className="text-left text-gray-500 text-xs font-medium uppercase py-3 px-4">Active</th>
+                            <tr className="border-b border-[var(--border)]">
+                                <th className="text-left text-[var(--muted)] text-xs font-medium uppercase py-3 px-4">Code</th>
+                                <th className="text-left text-[var(--muted)] text-xs font-medium uppercase py-3 px-4">Type</th>
+                                <th className="text-left text-[var(--muted)] text-xs font-medium uppercase py-3 px-4">Value</th>
+                                <th className="text-left text-[var(--muted)] text-xs font-medium uppercase py-3 px-4">Max Discount</th>
+                                <th className="text-left text-[var(--muted)] text-xs font-medium uppercase py-3 px-4">Min Order</th>
+                                <th className="text-left text-[var(--muted)] text-xs font-medium uppercase py-3 px-4">Usage</th>
+                                <th className="text-left text-[var(--muted)] text-xs font-medium uppercase py-3 px-4">Active</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -127,25 +127,25 @@ export default function AdminCouponsPage() {
                                     <tr key={i}><td colSpan={7} className="py-3 px-4"><div className="skeleton h-8 rounded-lg" /></td></tr>
                                 ))
                             ) : coupons.length === 0 ? (
-                                <tr><td colSpan={7} className="text-center py-12 text-gray-500">No coupons yet</td></tr>
+                                <tr><td colSpan={7} className="text-center py-12 text-[var(--muted)]">No coupons yet</td></tr>
                             ) : coupons.map(coupon => (
-                                <tr key={coupon._id} className="border-b border-dark-border/50 hover:bg-white/2 transition-all">
+                                <tr key={coupon._id} className="border-b border-[var(--border)]/50 hover:bg-white/2 transition-all">
                                     <td className="py-3 px-4">
                                         <span className="bg-brand-primary/10 text-brand-primary-light font-mono font-bold text-sm px-2.5 py-1 rounded-lg">
                                             {coupon.code}
                                         </span>
                                     </td>
-                                    <td className="py-3 px-4 text-gray-400 text-sm capitalize">{coupon.type}</td>
-                                    <td className="py-3 px-4 text-white text-sm font-medium">
+                                    <td className="py-3 px-4 text-[var(--muted)] text-sm capitalize">{coupon.type}</td>
+                                    <td className="py-3 px-4 text-[var(--text)] text-sm font-medium">
                                         {coupon.type === 'percentage' ? `${coupon.value}%` : `${BRAND.currency.symbol}${coupon.value}`}
                                     </td>
-                                    <td className="py-3 px-4 text-gray-400 text-sm">
+                                    <td className="py-3 px-4 text-[var(--muted)] text-sm">
                                         {coupon.max_discount ? `${BRAND.currency.symbol}${coupon.max_discount}` : '—'}
                                     </td>
-                                    <td className="py-3 px-4 text-gray-400 text-sm">
+                                    <td className="py-3 px-4 text-[var(--muted)] text-sm">
                                         {coupon.min_order_value ? `${BRAND.currency.symbol}${coupon.min_order_value}` : '—'}
                                     </td>
-                                    <td className="py-3 px-4 text-gray-400 text-sm">
+                                    <td className="py-3 px-4 text-[var(--muted)] text-sm">
                                         {coupon.used_count || 0}/{coupon.usage_limit === -1 ? '∞' : coupon.usage_limit}
                                     </td>
                                     <td className="py-3 px-4">
@@ -157,7 +157,7 @@ export default function AdminCouponsPage() {
                                             {coupon.is_active !== false ? (
                                                 <ToggleRight className="w-6 h-6 text-green-400" />
                                             ) : (
-                                                <ToggleLeft className="w-6 h-6 text-gray-600" />
+                                                <ToggleLeft className="w-6 h-6 text-[var(--muted)]" />
                                             )}
                                         </button>
                                     </td>

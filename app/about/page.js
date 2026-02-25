@@ -10,21 +10,21 @@ export default function AboutPage() {
             <div className="relative overflow-hidden py-16 px-6">
                 <div className="absolute inset-0 brand-gradient opacity-5" />
                 <div className="max-w-3xl mx-auto text-center relative">
-                    <h1 className="font-heading font-bold text-3xl sm:text-4xl text-white mb-4">About {BRAND.name}</h1>
-                    <p className="text-gray-400 text-lg leading-relaxed">{BRAND.description}</p>
+                    <h1 className="font-heading font-bold text-3xl sm:text-4xl text-[var(--text)] mb-4">About {BRAND.name}</h1>
+                    <p className="text-[var(--muted)] text-lg leading-relaxed">{BRAND.description}</p>
                 </div>
             </div>
 
             <div className="max-w-3xl mx-auto px-6 space-y-12">
                 {/* Mission */}
                 <section>
-                    <h2 className="font-heading font-bold text-xl text-white mb-4">Our Mission</h2>
-                    <p className="text-gray-400 leading-relaxed">
+                    <h2 className="font-heading font-bold text-xl text-[var(--text)] mb-4">Our Mission</h2>
+                    <p className="text-[var(--muted)] leading-relaxed">
                         At {BRAND.name}, we believe premium digital subscriptions shouldn&apos;t be expensive. Our platform
                         lets you share subscription costs with trusted groups, making services like Netflix, Spotify,
                         and YouTube Premium affordable for everyone.
                     </p>
-                    <p className="text-gray-400 leading-relaxed mt-3">
+                    <p className="text-[var(--muted)] leading-relaxed mt-3">
                         We&apos;ve built a secure, transparent platform where you can browse plans, join sharing groups,
                         and manage your subscriptions — all in one place.
                     </p>
@@ -32,7 +32,7 @@ export default function AboutPage() {
 
                 {/* How it works */}
                 <section>
-                    <h2 className="font-heading font-bold text-xl text-white mb-4">How It Works</h2>
+                    <h2 className="font-heading font-bold text-xl text-[var(--text)] mb-4">How It Works</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {[
                             { step: '01', title: 'Browse', desc: 'Explore 12+ brands across 8 categories with discounted plans.' },
@@ -41,8 +41,8 @@ export default function AboutPage() {
                         ].map(s => (
                             <div key={s.step} className="card p-5 hover:transform-none">
                                 <span className="text-brand-primary-light font-heading font-bold text-2xl">{s.step}</span>
-                                <h3 className="text-white font-semibold mt-2 mb-1">{s.title}</h3>
-                                <p className="text-gray-500 text-sm leading-relaxed">{s.desc}</p>
+                                <h3 className="text-[var(--text)] font-semibold mt-2 mb-1">{s.title}</h3>
+                                <p className="text-[var(--muted)] text-sm leading-relaxed">{s.desc}</p>
                             </div>
                         ))}
                     </div>
@@ -50,7 +50,7 @@ export default function AboutPage() {
 
                 {/* Features */}
                 <section>
-                    <h2 className="font-heading font-bold text-xl text-white mb-4">Key Features</h2>
+                    <h2 className="font-heading font-bold text-xl text-[var(--text)] mb-4">Key Features</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {[
                             'Secure phone OTP authentication',
@@ -62,7 +62,7 @@ export default function AboutPage() {
                         ].map(f => (
                             <div key={f} className="flex items-center gap-2.5 p-3 bg-white/2 rounded-xl">
                                 <div className="w-2 h-2 rounded-full brand-gradient shrink-0" />
-                                <span className="text-gray-400 text-sm">{f}</span>
+                                <span className="text-[var(--muted)] text-sm">{f}</span>
                             </div>
                         ))}
                     </div>
@@ -70,7 +70,7 @@ export default function AboutPage() {
 
                 {/* Contact CTA */}
                 <section className="text-center py-8">
-                    <p className="text-gray-500 text-sm mb-3">Have questions?</p>
+                    <p className="text-[var(--muted)] text-sm mb-3">Have questions?</p>
                     <Link href="/contact" className="btn-primary px-6 py-3 text-sm inline-flex items-center gap-2">
                         <Send className="w-4 h-4" /> Contact Us
                     </Link>

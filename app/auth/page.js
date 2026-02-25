@@ -102,14 +102,14 @@ export default function AuthPage() {
           <div className="text-center mb-6">
             <Link href="/" className="inline-flex items-center gap-2 mb-3">
               <div className="w-10 h-10 rounded-xl brand-gradient flex items-center justify-center">
-                <span className="text-white font-heading font-bold text-lg">{BRAND.name.charAt(0)}</span>
+                <span className="text-[var(--text)] font-heading font-bold text-lg">{BRAND.name.charAt(0)}</span>
               </div>
             </Link>
-            <h1 className="font-heading font-bold text-xl text-white">
+            <h1 className="font-heading font-bold text-xl text-[var(--text)]">
               {step === 'otp' ? 'Verify OTP' : step === 'success' ? 'Welcome!' : `Welcome to ${BRAND.name}`}
             </h1>
             {step === 'phone' && (
-              <p className="text-gray-500 text-sm mt-1">{BRAND.tagline}</p>
+              <p className="text-[var(--muted)] text-sm mt-1">{BRAND.tagline}</p>
             )}
           </div>
 
@@ -117,9 +117,9 @@ export default function AuthPage() {
           {step === 'phone' && (
             <form onSubmit={handleRequestOtp} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1.5">Phone Number</label>
+                <label className="block text-sm font-medium text-[var(--muted)] mb-1.5">Phone Number</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">+91</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted)] text-sm">+91</span>
                   <input
                     type="tel"
                     value={phone}
@@ -143,7 +143,7 @@ export default function AuthPage() {
                 Send OTP
               </button>
 
-              <p className="text-gray-600 text-[11px] text-center">
+              <p className="text-[var(--muted)] text-[11px] text-center">
                 By continuing, you agree to {BRAND.name}&apos;s{' '}
                 <Link href="/docs/terms-and-conditions" className="text-brand-primary-light hover:underline">Terms</Link>
                 {' '}&amp;{' '}
@@ -156,10 +156,10 @@ export default function AuthPage() {
           {step === 'otp' && (
             <div className="space-y-4">
               <div className="text-center">
-                <p className="text-gray-400 text-sm">
+                <p className="text-[var(--muted)] text-sm">
                   Enter the {BRAND.auth.otpLength}-digit code sent to
                 </p>
-                <p className="text-white font-medium">+91 {phone}</p>
+                <p className="text-[var(--text)] font-medium">+91 {phone}</p>
               </div>
 
               <div className="flex justify-center gap-2">
@@ -189,7 +189,7 @@ export default function AuthPage() {
 
               <div className="flex flex-col items-center gap-2">
                 {timer > 0 ? (
-                  <p className="text-gray-500 text-sm">Resend in {timer}s</p>
+                  <p className="text-[var(--muted)] text-sm">Resend in {timer}s</p>
                 ) : (
                   <button
                     onClick={(e) => { setOtp(Array(BRAND.auth.otpLength).fill('')); handleRequestOtp(e); }}
@@ -200,7 +200,7 @@ export default function AuthPage() {
                 )}
                 <button
                   onClick={() => { setStep('phone'); setOtp(Array(BRAND.auth.otpLength).fill('')); setError(''); }}
-                  className="text-gray-500 text-sm hover:text-white transition-colors"
+                  className="text-[var(--muted)] text-sm hover:text-[var(--text)] transition-colors"
                 >
                   Change Number
                 </button>
@@ -212,15 +212,15 @@ export default function AuthPage() {
           {step === 'success' && (
             <div className="text-center py-4">
               <CheckCircle className="w-16 h-16 text-brand-success mx-auto mb-3" />
-              <h3 className="font-heading font-bold text-lg text-white">You&apos;re in!</h3>
-              <p className="text-gray-500 text-sm">Redirecting you to {BRAND.name}...</p>
+              <h3 className="font-heading font-bold text-lg text-[var(--text)]">You&apos;re in!</h3>
+              <p className="text-[var(--muted)] text-sm">Redirecting you to {BRAND.name}...</p>
             </div>
           )}
         </div>
 
         {/* Bottom link */}
-        <p className="text-center text-gray-600 text-xs mt-4">
-          <Link href="/" className="hover:text-white transition-colors">← Back to {BRAND.name}</Link>
+        <p className="text-center text-[var(--muted)] text-xs mt-4">
+          <Link href="/" className="hover:text-[var(--text)] transition-colors">← Back to {BRAND.name}</Link>
         </p>
       </div>
     </div>
