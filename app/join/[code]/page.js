@@ -56,6 +56,7 @@ export default function JoinGroupPage() {
             }
 
             const data = res.data;
+            console.log('🔑 JOIN_INTENT:', data.joinIntentId, '| orderId:', data.razorpay_order_id || 'N/A');
 
             // Already joined (free group or wallet)
             if (data.joined) {
