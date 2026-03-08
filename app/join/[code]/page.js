@@ -21,8 +21,6 @@ export default function JoinGroupPage() {
     const [loading, setLoading] = useState(true);
     const [joining, setJoining] = useState(false);
     const [result, setResult] = useState(null);
-    const [joinIntent, setJoinIntent] = useState(null);
-    const [razorpayReady, setRazorpayReady] = useState(false);
 
     const code = params.code;
 
@@ -50,7 +48,7 @@ export default function JoinGroupPage() {
         if (!isAuthenticated) { setShowAuthModal(true); return; }
         setJoining(true);
         try {
-            const res = await api.initiateInviteJoin(code, { payment_method: razorpayReady ? 'razorpay' : 'dev' });
+            const res = await api.initiateInviteJoin(code, { payment_method: 'razorpay' });
             if (!res.success) {
                 setResult({ type: 'error', message: res.message || 'Could not join group' });
                 setJoining(false);
@@ -68,7 +66,7 @@ export default function JoinGroupPage() {
             }
 
             // Razorpay checkout
-            if (data.razorpay_order_id && razorpayReady && window.Razorpay) {
+            if (data.razorpay_order_id && window.Razorpay) {
                 const options = {
                     key: data.razorpay_key_id,
                     amount: data.amount,
@@ -88,30 +86,14 @@ export default function JoinGroupPage() {
                 return;
             }
 
-            // Dev fallback — show confirm button
-            setJoinIntent(data);
+            // Razorpay SDK not loaded
+            setResult({ type: 'error', message: 'Payment gateway not loaded. Please refresh and try again.' });
             setJoining(false);
         } catch (e) {
             setResult({ type: 'error', message: 'Something went wrong' });
             setJoining(false);
         }
-    }, [isAuthenticated, code, group, razorpayReady, user, setShowAuthModal]);
-
-    const handleDevConfirm = async () => {
-        if (!joinIntent) return;
-        setJoining(true);
-        try {
-            const res = await api.confirmInviteJoin(code, joinIntent.joinIntentId);
-            if (res.success) {
-                setResult({ type: 'success', message: res.message || 'Joined successfully!', groupId: res.data?.group_id });
-            } else {
-                setResult({ type: 'error', message: res.message || 'Join failed' });
-            }
-        } catch (e) {
-            setResult({ type: 'error', message: 'Confirmation failed' });
-        }
-        setJoining(false);
-    };
+    }, [isAuthenticated, code, group, user, setShowAuthModal]);
 
     const filled = group?.member_count || 0;
     const total = group?.share_limit || 5;
@@ -119,7 +101,7 @@ export default function JoinGroupPage() {
 
     return (
         <div className="min-h-screen"><Header /><AuthModal />
-            <Script src="https://checkout.razorpay.com/v1/checkout.js" onLoad={() => setRazorpayReady(true)} />
+            <Script src="https://checkout.razorpay.com/v1/checkout.js" />
             <MotionPage>
                 <section className="pt-28 pb-[var(--section-gap)] md:pt-36">
                     <Container className="max-w-lg mx-auto text-center">
@@ -152,20 +134,6 @@ export default function JoinGroupPage() {
                                         <button onClick={() => router.push('/groups')} className="btn-secondary">Browse Groups</button>
                                     </>
                                 )}
-                            </div>
-                        ) : joinIntent ? (
-                            /* Dev confirm step */
-                            <div className="paper-card p-8">
-                                <p className="text-meta mb-3">DEV PAYMENT CONFIRMATION</p>
-                                <h2 className="text-heading text-xl mb-2">{group?.name}</h2>
-                                <p className="text-caption mb-6">
-                                    Amount: {formatCurrency(joinIntent.amount)} · Payment: {joinIntent.payment_method}
-                                </p>
-                                <button onClick={handleDevConfirm} disabled={joining}
-                                    className="btn-primary w-full py-3.5 text-sm">
-                                    {joining ? <><Loader2 className="w-4 h-4 animate-spin" /> Confirming...</> : '✅ Confirm Payment (Dev)'}
-                                </button>
-                                <p className="text-[9px] text-[var(--muted)] mt-3">This button only appears in development mode</p>
                             </div>
                         ) : (
                             <>

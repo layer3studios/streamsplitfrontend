@@ -102,13 +102,7 @@ export default function WalletPage() {
     const res = await api.initiateTopup(amt);
     if (!res.success) { setTopping(false); return; }
 
-    // Dev mode: direct credit
-    if (res.data?.dev) {
-      await loadWallet(); setTopupAmount(''); setTopping(false);
-      return;
-    }
-
-    // Production: open Razorpay checkout
+    // Open Razorpay checkout
     if (!window.Razorpay) { setTopping(false); return; }
     const options = {
       key: res.data.key_id,
