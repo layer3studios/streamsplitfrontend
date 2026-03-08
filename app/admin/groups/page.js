@@ -72,8 +72,12 @@ export default function AdminGroupsPage() {
                                             }`}>{group.is_public ? 'Public' : 'Private'}</span>
                                     </td>
                                     <td className="py-3 px-4">
-                                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${group.status === 'active' ? 'text-green-400 bg-green-400/10' : 'text-[var(--muted)] bg-gray-400/10'
-                                            }`}>{group.status || 'active'}</span>
+                                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                                            group.status === 'active' ? 'text-green-400 bg-green-400/10' :
+                                            group.status === 'expired' ? 'text-red-400 bg-red-400/10' :
+                                            group.status === 'waiting' ? 'text-yellow-400 bg-yellow-400/10' :
+                                            'text-[var(--muted)] bg-gray-400/10'
+                                            }`}>{group.status || 'waiting'}</span>
                                     </td>
                                     <td className="py-3 px-4 text-[var(--muted)] text-xs">{new Date(group.createdAt).toLocaleDateString()}</td>
                                 </tr>

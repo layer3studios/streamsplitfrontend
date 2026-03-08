@@ -21,10 +21,15 @@ export default function CreateGroupPage() {
     const [created, setCreated] = useState(null);
     const [copied, setCopied] = useState(false);
     const [form, setForm] = useState({
-        name: '', description: '', brand_id: '', share_price: '',
+        name: '', description: '', brand_id: '', share_price: '', total_price: '',
         share_limit: 5, duration_days: 30, is_public: true,
     });
+    const [pricingMode, setPricingMode] = useState('total'); // 'total' or 'per_seat'
     const [error, setError] = useState('');
+
+    const computedSharePrice = pricingMode === 'total' && form.total_price && form.share_limit
+        ? Math.ceil(parseFloat(form.total_price) / parseInt(form.share_limit))
+        : null;
 
     useEffect(() => {
         api.getBrands().then(r => { if (r.success) setBrands(r.data?.brands || r.data || []); });
@@ -47,14 +52,15 @@ export default function CreateGroupPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!form.name || !form.share_price || form.share_price <= 0) {
-            return setError('Name and share price are required');
+        const finalPrice = pricingMode === 'total' ? computedSharePrice : parseFloat(form.share_price);
+        if (!form.name || !finalPrice || finalPrice <= 0) {
+            return setError('Name and price are required');
         }
         setLoading(true); setError('');
         const res = await api.createGroup({
             name: form.name, description: form.description,
             brand_id: form.brand_id || undefined,
-            share_price: parseFloat(form.share_price),
+            share_price: finalPrice,
             share_limit: parseInt(form.share_limit),
             duration_days: parseInt(form.duration_days),
             is_public: form.is_public,
@@ -123,18 +129,55 @@ export default function CreateGroupPage() {
                                     </select>
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="block text-meta mb-2">PRICE PER SEAT *</label>
-                                        <input type="number" min="1" value={form.share_price}
-                                            onChange={e => setForm({ ...form, share_price: e.target.value })}
-                                            placeholder="99" className="input" required />
+                                    <div className="col-span-2">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <label className="text-meta">PRICING MODE</label>
+                                            <div className="flex bg-[var(--bg)] border border-[var(--border)] rounded-lg overflow-hidden text-[10px]">
+                                                <button type="button" onClick={() => setPricingMode('total')}
+                                                    className={`px-2.5 py-1 transition-colors ${pricingMode === 'total' ? 'bg-[var(--accent)] text-white' : 'text-[var(--muted)]'}`}>
+                                                    Total Price
+                                                </button>
+                                                <button type="button" onClick={() => setPricingMode('per_seat')}
+                                                    className={`px-2.5 py-1 transition-colors ${pricingMode === 'per_seat' ? 'bg-[var(--accent)] text-white' : 'text-[var(--muted)]'}`}>
+                                                    Per Seat
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
+                                    {pricingMode === 'total' ? (
+                                        <div>
+                                            <label className="block text-meta mb-2">TOTAL SUBSCRIPTION PRICE *</label>
+                                            <input type="number" min="1" value={form.total_price}
+                                                onChange={e => setForm({ ...form, total_price: e.target.value })}
+                                                placeholder="e.g. 499" className="input" required />
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <label className="block text-meta mb-2">PRICE PER SEAT *</label>
+                                            <input type="number" min="1" value={form.share_price}
+                                                onChange={e => setForm({ ...form, share_price: e.target.value })}
+                                                placeholder="99" className="input" required />
+                                        </div>
+                                    )}
                                     <div>
                                         <label className="block text-meta mb-2">MAX MEMBERS</label>
                                         <input type="number" min="2" max="20" value={form.share_limit}
                                             onChange={e => setForm({ ...form, share_limit: e.target.value })} className="input" />
                                     </div>
                                 </div>
+
+                                {pricingMode === 'total' && computedSharePrice > 0 && (
+                                    <div className="bg-[var(--bg)] border border-[var(--border)] rounded-xl p-3 text-xs space-y-1">
+                                        <div className="flex justify-between">
+                                            <span className="text-[var(--muted)]">Total price</span>
+                                            <span>{formatCurrency(parseFloat(form.total_price))}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-[var(--muted)]">÷ {form.share_limit} members</span>
+                                            <span className="font-medium text-[var(--text)]">{formatCurrency(computedSharePrice)}/seat</span>
+                                        </div>
+                                    </div>
+                                )}
                                 <div>
                                     <label className="block text-meta mb-2">DURATION (DAYS)</label>
                                     <input type="number" min="7" value={form.duration_days}

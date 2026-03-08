@@ -37,7 +37,9 @@ export default function JoinGroupPage() {
                     ? 'Invite has expired — ask the group owner for a new link.'
                     : res.error === 'MAX_USES'
                         ? 'This invite has reached its usage limit.'
-                        : res.message || 'Invalid invite code';
+                        : res.error === 'GROUP_CLOSED'
+                            ? 'This group is no longer accepting new members.'
+                            : res.message || 'Invalid invite code';
                 setResult({ type: 'error', message: msg, errorCode: res.error });
             }
             setLoading(false);
@@ -112,7 +114,7 @@ export default function JoinGroupPage() {
     };
 
     const filled = group?.member_count || 0;
-    const total = group?.max_members || group?.share_limit || 4;
+    const total = group?.share_limit || 5;
     const isFull = filled >= total;
 
     return (

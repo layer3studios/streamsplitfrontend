@@ -99,7 +99,7 @@ export default function HomePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
               {loading ? <GridSkeleton count={6} /> : groups.length > 0 ? groups.map(group => {
                 const filled = group.member_count || 0;
-                const total = group.share_limit || group.max_members || 4;
+                const total = group.share_limit || 5;
                 const pct = Math.min((filled / total) * 100, 100);
                 return (
                   <div key={group._id} className="paper-card p-5">

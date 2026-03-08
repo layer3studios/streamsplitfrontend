@@ -110,7 +110,7 @@ export default function GroupsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {groups.map(group => {
                   const filled = group.member_count || 0;
-                  const total = group.max_members || 4;
+                  const total = group.share_limit || 5;
                   const pct = Math.min((filled / total) * 100, 100);
                   return (
                     <div key={group._id} className="paper-card p-5">
@@ -142,6 +142,8 @@ export default function GroupsPage() {
                         <div className="flex items-center gap-2">
                           <h3 className="text-heading text-sm truncate">{group.name}</h3>
                           <span className="badge text-[9px]">{group._role === 'owner' ? 'OWNER' : 'MEMBER'}</span>
+                          {group.status === 'expired' && <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full text-red-400 bg-red-400/10">EXPIRED</span>}
+                          {group.status === 'archived' && <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full text-[var(--muted)] bg-gray-400/10">ARCHIVED</span>}
                         </div>
                         <p className="text-meta text-[10px] mt-1">{group.brand_id?.name || 'Service'} · {group.member_count || 0} members</p>
                       </div>

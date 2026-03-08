@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import Script from 'next/script';
 import {
   Wallet as WalletIcon, TrendingUp, ArrowUpRight, ArrowDownLeft,
   Plus, Download, Filter, Search, Banknote, Clock, CheckCircle,
@@ -37,6 +38,7 @@ export default function WalletPage() {
   const [walletLoading, setWalletLoading] = useState(true);
   const [topupAmount, setTopupAmount] = useState('');
   const [topping, setTopping] = useState(false);
+  const [razorpayReady, setRazorpayReady] = useState(false);
   const [filterType, setFilterType] = useState('');
   const [filterSearch, setFilterSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -92,14 +94,45 @@ export default function WalletPage() {
 
   const handleSearch = () => { setWalletPage(1); loadWalletTxns(1); };
 
-  const handleTopup = async () => {
+  const handleTopup = useCallback(async () => {
     const amt = parseFloat(topupAmount);
     if (!amt || amt <= 0) return;
     setTopping(true);
-    const res = await api.topupWallet(amt);
-    if (res.success) { await loadWallet(); setTopupAmount(''); }
-    setTopping(false);
-  };
+
+    const res = await api.initiateTopup(amt);
+    if (!res.success) { setTopping(false); return; }
+
+    // Dev mode: direct credit
+    if (res.data?.dev) {
+      await loadWallet(); setTopupAmount(''); setTopping(false);
+      return;
+    }
+
+    // Production: open Razorpay checkout
+    if (!window.Razorpay) { setTopping(false); return; }
+    const options = {
+      key: res.data.key_id,
+      amount: Math.round(amt * 100),
+      currency: 'INR',
+      name: 'StreamSplit Wallet',
+      description: `Top up ₹${amt}`,
+      order_id: res.data.order_id,
+      handler: async (response) => {
+        const verify = await api.verifyTopup({
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature,
+          amount: amt,
+        });
+        if (verify.success) { await loadWallet(); setTopupAmount(''); }
+        setTopping(false);
+      },
+      modal: { ondismiss: () => setTopping(false) },
+      theme: { color: '#6366f1' },
+    };
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  }, [topupAmount]);
 
   // ─── Earnings loaders ─────────────────────────
   const loadEarnings = async () => {
@@ -151,6 +184,7 @@ export default function WalletPage() {
 
   return (
     <div className="min-h-screen"><Header /><AuthModal />
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" onLoad={() => setRazorpayReady(true)} />
       <MotionPage>
         <section className="pt-28 pb-8 md:pt-36">
           <Container><SectionHeader meta="MONEY" title="Payments" /></Container>
