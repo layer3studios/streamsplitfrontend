@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, ShoppingCart, Clock, Check, Loader2, Package } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Clock, Check, Loader2, Package, Users } from 'lucide-react';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
 import MobileNav from '../../../components/layout/MobileNav';
@@ -127,6 +127,8 @@ export default function BrandDetailPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {plans.map(plan => {
                                     const discount = plan.original_price ? Math.round((1 - plan.price / plan.original_price) * 100) : 0;
+                                    const gi = plan.group_info;
+                                    const isFull = gi && (gi.is_full || gi.seats_left === 0);
                                     return (
                                         <div key={plan._id} className="paper-card p-6 flex flex-col h-full">
                                             <div className="flex justify-between items-start mb-3">
@@ -137,6 +139,21 @@ export default function BrandDetailPage() {
                                             </div>
                                             {plan.description && (
                                                 <p className="text-caption text-sm flex-1 mb-4">{plan.description}</p>
+                                            )}
+                                            {gi && (
+                                                <div className="mb-4">
+                                                    <div className="flex items-center gap-1.5 text-xs text-[var(--muted)] mb-1.5">
+                                                        <Users className="w-3.5 h-3.5" />
+                                                        <span>{gi.is_full ? 'No seats available' : `${gi.seats_left} seat${gi.seats_left !== 1 ? 's' : ''} left`}</span>
+                                                        <span className="ml-auto text-[10px]">{gi.seats_filled}/{gi.seats_total}</span>
+                                                    </div>
+                                                    <div className="w-full h-1 bg-[var(--border)] rounded-full overflow-hidden">
+                                                        <div className={`h-full rounded-full ${gi.is_full ? 'bg-[var(--danger)]' : 'bg-[var(--accent)]'}`} style={{ width: `${Math.min((gi.seats_filled / gi.seats_total) * 100, 100)}%` }} />
+                                                    </div>
+                                                    {!gi.is_full && (
+                                                        <p className="text-[10px] text-[var(--success)] mt-1.5">✓ You&apos;ll be automatically added to &ldquo;{gi.name}&rdquo; after payment</p>
+                                                    )}
+                                                </div>
                                             )}
                                             <div className="flex items-center gap-2 text-xs text-[var(--muted)] mb-4 pt-3 border-t border-[var(--border)]">
                                                 <Clock className="w-3.5 h-3.5" />
@@ -150,11 +167,13 @@ export default function BrandDetailPage() {
                                             </div>
                                             <button
                                                 onClick={() => handleAddToCart(plan._id)}
-                                                disabled={addingPlan === plan._id}
+                                                disabled={addingPlan === plan._id || isFull}
                                                 className={`btn-primary w-full py-3 text-xs mt-auto ${addedPlan === plan._id ? '!bg-[var(--success)] !border-[var(--success)]' : ''
-                                                    }`}
+                                                    } ${isFull ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             >
-                                                {addingPlan === plan._id ? (
+                                                {isFull ? (
+                                                    <>No Seats Available</>
+                                                ) : addingPlan === plan._id ? (
                                                     <><Loader2 className="w-4 h-4 animate-spin" /> Adding...</>
                                                 ) : addedPlan === plan._id ? (
                                                     <><Check className="w-4 h-4" /> Added</>

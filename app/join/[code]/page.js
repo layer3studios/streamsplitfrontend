@@ -118,7 +118,9 @@ export default function JoinGroupPage() {
                                         <CheckCircle className="w-12 h-12 text-[var(--success)] mx-auto mb-4" />
                                         <h2 className="text-display mb-2">You're In!</h2>
                                         <p className="text-caption mb-6">{result.message}</p>
-                                        <button onClick={() => router.push('/groups')} className="btn-primary">View My Groups</button>
+                                        <div className="flex gap-3 justify-center">
+                                            <button onClick={() => router.push('/groups?tab=my')} className="btn-primary">View My Groups</button>
+                                        </div>
                                     </>
                                 ) : (
                                     <>

@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Package, LogOut, ChevronRight, Edit2, ShoppingBag, Wallet, Users, Bell } from 'lucide-react';
 import Header from '../../components/layout/Header';
@@ -18,17 +18,19 @@ import api from '../../lib/api';
 
 export default function AccountPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, isAuthenticated, setUser, logout: storeLogout } = useStore();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!isAuthenticated) { setLoading(false); return; }
+    setLoading(true);
     api.getOrders().then(r => {
-      if (r.success) setOrders(r.data?.orders || r.data || []);
+      if (r.success) setOrders(Array.isArray(r.data) ? r.data : (r.data?.orders || []));
       setLoading(false);
     });
-  }, [isAuthenticated]);
+  }, [isAuthenticated, searchParams]);
 
   const handleLogout = async () => {
     try { await api.logout(); } catch { }
@@ -106,14 +108,21 @@ export default function AccountPage() {
                 <div className="space-y-0">
                   {orders.slice(0, 10).map((order, i) => (
                     <div key={order._id}>
-                      <div className="flex items-center justify-between py-4">
+                      <div className="flex items-start justify-between py-4">
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-[var(--text)] truncate">Order #{order._id?.slice(-6)}</p>
+                          <p className="text-sm font-medium text-[var(--text)] truncate">{order.order_number || `Order #${order._id?.slice(-6)}`}</p>
+                          <p className="text-xs text-[var(--muted)] mt-0.5">
+                            {order.items?.map(item => item.plan_snapshot?.name || item.plan_snapshot?.brand_name).filter(Boolean).join(', ')}
+                          </p>
                           <p className="text-meta text-[10px] mt-0.5">
-                            {new Date(order.created_at || order.createdAt).toLocaleDateString()} · {order.status || 'completed'}
+                            {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            {' · '}
+                            <span className={order.status === 'fulfilled' ? 'text-[var(--success)]' : order.status === 'pending' ? 'text-[var(--warning)]' : ''}>
+                              {order.status === 'fulfilled' ? 'Completed' : order.status === 'pending' ? 'Pending' : order.status}
+                            </span>
                           </p>
                         </div>
-                        <span className="text-sm font-medium text-[var(--text)]">{formatCurrency(order.total || order.amount || 0)}</span>
+                        <span className="text-sm font-medium text-[var(--text)] shrink-0 ml-4">{formatCurrency(order.total || 0)}</span>
                       </div>
                       {i < Math.min(orders.length, 10) - 1 && <Divider />}
                     </div>

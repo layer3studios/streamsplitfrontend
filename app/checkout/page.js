@@ -54,7 +54,7 @@ export default function CheckoutPage() {
                 if (verifyRes.success) {
                     setResult({ type: 'success', message: 'Payment successful! Order confirmed.' });
                     setCart(null);
-                    setTimeout(() => router.push('/account'), 2000);
+                    setTimeout(() => router.push('/account?refresh=orders'), 2000);
                 } else {
                     setResult({ type: 'error', message: verifyRes.message || 'Payment verification failed' });
                 }
@@ -74,7 +74,7 @@ export default function CheckoutPage() {
                 setProcessing(false);
                 setResult({ type: 'success', message: 'Order placed successfully!' });
                 setCart(null);
-                setTimeout(() => router.push('/account'), 2000);
+                setTimeout(() => router.push('/account?refresh=orders'), 2000);
             } else {
                 if (res.data?.razorpay) openRazorpay(res.data.razorpay, res.data.order._id);
                 else { setProcessing(false); setResult({ type: 'error', message: 'Razorpay order creation failed' }); }
@@ -155,7 +155,13 @@ export default function CheckoutPage() {
                                                 <p className="text-[var(--muted)] text-xs">
                                                     Balance: {formatCurrency(wallet?.balance || 0)}
                                                     {wallet && wallet.balance < cart.total && (
-                                                        <span className="text-[var(--danger)] ml-2">(Insufficient — <button onClick={() => router.push('/wallet')} className="underline">Top up</button>)</span>
+                                                        <span className="text-[var(--danger)] ml-2">(Insufficient — <span
+                                                            onClick={(e) => { e.stopPropagation(); router.push('/wallet'); }}
+                                                            className="underline cursor-pointer hover:opacity-80"
+                                                            role="link"
+                                                            tabIndex={0}
+                                                            onKeyDown={(e) => e.key === 'Enter' && router.push('/wallet')}
+                                                        >Top up</span>)</span>
                                                     )}
                                                 </p>
                                             </div>

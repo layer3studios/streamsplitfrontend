@@ -22,13 +22,15 @@ export default function CreateGroupPage() {
     const [copied, setCopied] = useState(false);
     const [form, setForm] = useState({
         name: '', description: '', brand_id: '', share_price: '', total_price: '',
-        share_limit: 5, duration_days: 30, is_public: true,
+        slots_for_others: 4, duration_days: 30, is_public: true,
     });
     const [pricingMode, setPricingMode] = useState('total'); // 'total' or 'per_seat'
     const [error, setError] = useState('');
 
-    const computedSharePrice = pricingMode === 'total' && form.total_price && form.share_limit
-        ? Math.ceil(parseFloat(form.total_price) / parseInt(form.share_limit))
+    const totalMembers = parseInt(form.slots_for_others) + 1; // +1 for owner
+
+    const computedSharePrice = pricingMode === 'total' && form.total_price && form.slots_for_others
+        ? Math.ceil(parseFloat(form.total_price) / totalMembers)
         : null;
 
     useEffect(() => {
@@ -61,7 +63,7 @@ export default function CreateGroupPage() {
             name: form.name, description: form.description,
             brand_id: form.brand_id || undefined,
             share_price: finalPrice,
-            share_limit: parseInt(form.share_limit),
+            share_limit: totalMembers,
             duration_days: parseInt(form.duration_days),
             is_public: form.is_public,
         });
@@ -160,9 +162,10 @@ export default function CreateGroupPage() {
                                         </div>
                                     )}
                                     <div>
-                                        <label className="block text-meta mb-2">MAX MEMBERS</label>
-                                        <input type="number" min="2" max="20" value={form.share_limit}
-                                            onChange={e => setForm({ ...form, share_limit: e.target.value })} className="input" />
+                                        <label className="block text-meta mb-2">SLOTS FOR OTHERS</label>
+                                        <input type="number" min="1" max="19" value={form.slots_for_others}
+                                            onChange={e => setForm({ ...form, slots_for_others: e.target.value })} className="input" />
+                                        <p className="text-[10px] text-[var(--muted)] mt-1">You + {form.slots_for_others} others = {totalMembers} total</p>
                                     </div>
                                 </div>
 
@@ -173,8 +176,16 @@ export default function CreateGroupPage() {
                                             <span>{formatCurrency(parseFloat(form.total_price))}</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-[var(--muted)]">÷ {form.share_limit} members</span>
+                                            <span className="text-[var(--muted)]">÷ {totalMembers} members (you + {form.slots_for_others})</span>
                                             <span className="font-medium text-[var(--text)]">{formatCurrency(computedSharePrice)}/seat</span>
+                                        </div>
+                                        <div className="flex justify-between pt-1 border-t border-[var(--border)]">
+                                            <span className="text-[var(--muted)]">Your earnings per seat ({100 - BRAND.platformCutPercent}%)</span>
+                                            <span className="text-[var(--success)]">{formatCurrency(Math.floor(computedSharePrice * (100 - BRAND.platformCutPercent) / 100))}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-[var(--muted)]">Max monthly earnings ({form.slots_for_others} seats)</span>
+                                            <span className="text-[var(--success)] font-medium">{formatCurrency(Math.floor(computedSharePrice * (100 - BRAND.platformCutPercent) / 100) * parseInt(form.slots_for_others))}</span>
                                         </div>
                                     </div>
                                 )}

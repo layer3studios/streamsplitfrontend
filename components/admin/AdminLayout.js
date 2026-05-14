@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
     LayoutDashboard, Users, ShoppingBag, UsersRound, Ticket, Tag,
-    Settings, LogOut, ChevronLeft, ChevronRight, Shield, ArrowDownRight
+    Settings, LogOut, ChevronLeft, ChevronRight, Shield, ArrowDownRight, Link2
 } from 'lucide-react';
 import { useStore } from '../../lib/store';
 import api from '../../lib/api';
@@ -18,6 +18,7 @@ const NAV_ITEMS = [
     { icon: ArrowDownRight, label: 'Withdrawals', path: '/admin/withdrawals' },
     { icon: Ticket, label: 'Coupons', path: '/admin/coupons' },
     { icon: Tag, label: 'Brands', path: '/admin/brands' },
+    { icon: Link2, label: 'Plan → Group', path: '/admin/plans' },
     { icon: Settings, label: 'Settings', path: '/admin/settings' },
 ];
 
