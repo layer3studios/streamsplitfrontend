@@ -170,14 +170,18 @@ export default function GroupInfoDrawer({ groupId, groupName, onClose }) {
                                             </div>
                                         ))}
                                     </div>
-                                    {/* Logged out button */}
-                                    <Divider className="my-4" />
-                                    <button onClick={handleLoggedOut} disabled={actionLoading}
-                                        className="w-full btn-ghost text-xs flex items-center justify-center gap-2 text-[var(--danger)] border border-[var(--border)] py-2.5 rounded-xl">
-                                        {actionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LogOut className="w-3.5 h-3.5" />}
-                                        I got logged out
-                                    </button>
-                                    <p className="text-[9px] text-[var(--muted)] text-center mt-1">Sends a help request to the group chat</p>
+                                    {/* Logged out button — only for non-owner members */}
+                                    {!isOwner && (
+                                        <>
+                                            <Divider className="my-4" />
+                                            <button onClick={handleLoggedOut} disabled={actionLoading}
+                                                className="w-full btn-ghost text-xs flex items-center justify-center gap-2 text-[var(--danger)] border border-[var(--border)] py-2.5 rounded-xl">
+                                                {actionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LogOut className="w-3.5 h-3.5" />}
+                                                I got logged out
+                                            </button>
+                                            <p className="text-[9px] text-[var(--muted)] text-center mt-1">Sends a help request to the group chat</p>
+                                        </>
+                                    )}
                                 </div>
                             )}
 

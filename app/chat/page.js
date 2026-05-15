@@ -18,6 +18,41 @@ import { useStore } from '../../lib/store';
 import api from '../../lib/api';
 import { io } from 'socket.io-client';
 
+// Short notification beep using Web Audio API
+// AudioContext must be created/resumed after user gesture (browser policy)
+let _audioCtx = null;
+function getAudioCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (_audioCtx.state === 'suspended') _audioCtx.resume();
+  return _audioCtx;
+}
+// Init audio context on first user interaction
+if (typeof window !== 'undefined') {
+  const initAudio = () => {
+    getAudioCtx();
+    document.removeEventListener('click', initAudio);
+    document.removeEventListener('keydown', initAudio);
+  };
+  document.addEventListener('click', initAudio, { once: true });
+  document.addEventListener('keydown', initAudio, { once: true });
+}
+
+function playNotifSound() {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 880;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.3);
+  } catch {}
+}
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:4000';
 
 function MessageBubble({ msg, isOwn, user }) {
@@ -156,7 +191,14 @@ export default function ChatPage() {
 
     socket.emit('join_room', activeRoom._id);
     socket.on('message_history', (history) => setMessages(history || []));
-    socket.on('new_message', (msg) => setMessages(prev => [...prev, msg]));
+    socket.on('new_message', (msg) => {
+      setMessages(prev => [...prev, msg]);
+      // Play notification sound if the message is from someone else
+      const senderId = msg.sender_id?._id || msg.sender_id;
+      if (senderId && senderId !== user?._id) playNotifSound();
+    });
+    // Refresh sidebar when rooms change (new DM created, friend accepted, etc.)
+    socket.on('room_update', () => loadRooms());
 
     return () => { socket.disconnect(); };
   }, [activeRoom, isAuthenticated]);

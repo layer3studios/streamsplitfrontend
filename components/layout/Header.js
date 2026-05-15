@@ -18,6 +18,7 @@ export default function Header() {
     { label: 'Groups', href: '/groups' },
     { label: 'Wallet', href: '/wallet' },
     { label: 'Chat', href: '/chat' },
+    { label: 'Friends', href: '/friends' },
   ];
 
   // Close on Escape

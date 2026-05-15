@@ -43,13 +43,15 @@ export default function AppBootstrap() {
                     // Only load cart after user is confirmed
                     const cartRes = await api.getCart();
                     if (cartRes.success) setCart(cartRes.data);
-                } else {
-                    // 401 or other failure — user session invalid, clear tokens quietly
+                } else if (userRes.message === 'Invalid token' || userRes.message === 'User not found or inactive') {
+                    // Only clear on definitive auth rejection (not network errors or rate limits)
                     api.clearTokens();
                     if (typeof window !== 'undefined') {
                         localStorage.removeItem('user');
                     }
+                    setUser(null);
                 }
+                // For other failures (network error, etc.) — keep existing auth state
             } catch (e) {
                 // Network error or similar — don't spam, just warn once
                 console.warn('Bootstrap: failed to load user data');

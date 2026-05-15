@@ -37,7 +37,7 @@ export default function RootLayout({ children }) {
           })();
         `}} />
       </head>
-      <body style={{ position: 'relative', zIndex: 1 }}>
+      <body style={{ position: 'relative', zIndex: 1 }} suppressHydrationWarning>
         <ClientProviders>
           <AppBootstrap />
           {children}

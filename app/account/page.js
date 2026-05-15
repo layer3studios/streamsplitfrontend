@@ -47,7 +47,7 @@ export default function AccountPage() {
   const menuItems = [
     { label: 'My Orders', icon: ShoppingBag, href: '#orders' },
     { label: 'Wallet', icon: Wallet, href: '/wallet' },
-    { label: 'My Groups', icon: Users, href: '/groups' },
+    { label: 'My Groups', icon: Users, href: '/groups?tab=my' },
     { label: 'Notifications', icon: Bell, href: '#' },
   ];
 

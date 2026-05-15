@@ -63,8 +63,11 @@ export default function FriendsPage() {
 
     const handleAccept = async (requestId) => {
         setActionLoading(s => ({ ...s, [requestId]: true }));
-        await api.acceptFriendRequest(requestId);
-        await loadData();
+        const res = await api.acceptFriendRequest(requestId);
+        if (res.success) {
+            // Immediately reload both friends and requests to reflect changes
+            await loadData();
+        }
         setActionLoading(s => ({ ...s, [requestId]: false }));
     };
 
