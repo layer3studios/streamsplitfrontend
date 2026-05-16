@@ -29,4 +29,6 @@ const nextConfig = {
   },
 };
 
+nextConfig.experimental = { missingSuspenseWithCSRBailout: false };
+nextConfig.experimental = { missingSuspenseWithCSRBailout: false };
 module.exports = nextConfig;
