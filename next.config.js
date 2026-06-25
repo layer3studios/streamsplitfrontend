@@ -1,13 +1,11 @@
-const BRAND = require('../brand.config');
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
     NEXT_PUBLIC_SOCKET_URL: process.env.NEXT_PUBLIC_SOCKET_URL || '',
-    NEXT_PUBLIC_BRAND_NAME: BRAND.name,
-    NEXT_PUBLIC_BRAND_SLUG: BRAND.slug,
+    NEXT_PUBLIC_BRAND_NAME: process.env.NEXT_PUBLIC_BRAND_NAME || 'StreamSplit',
+    NEXT_PUBLIC_BRAND_SLUG: process.env.NEXT_PUBLIC_BRAND_SLUG || 'streamsplit',
   },
   images: {
     domains: ['localhost', 'ucarecdn.com', 'upload.wikimedia.org'],
@@ -29,6 +27,5 @@ const nextConfig = {
   },
 };
 
-nextConfig.experimental = { missingSuspenseWithCSRBailout: false };
 nextConfig.experimental = { missingSuspenseWithCSRBailout: false };
 module.exports = nextConfig;
